@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<rss version="0.91">
+  <channel>
+    <title>enforce-victims-rule - Checkstyle report</title>
+    <link>http://gcmurphy.github.com/enforce-victims-plugin</link>
+    <description>enforce-victims-rule - Checkstyle report</description>
+    <language>en-us</language>
+    <copyright>&#169;2012</copyright>
+    <item>
+      <title>File: 15,
+             Errors: 1011,
+             Warnings: 0,
+             Infos: 0
+      </title>
+            <link>http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html</link>
+      <description>
+        <p>Click <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html">here</a> for the full Checkstyle report.</p>
+
+        <table summary="Files" boder="1">
+          <thead>
+            <tr>
+              <th>Files</th>
+              <th style="width:30px;"><abbr title="Info">I</abbr></th>
+              <th style="width:30px;"><abbr title="Warning">W</abbr></th>
+              <th style="width:30px;"><abbr title="Error">E</abbr></th>
+            </tr>
+          </thead>
+          <tbody>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.commands.MetadataCommand.java">com/redhat/victims/commands/MetadataCommand.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  37
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.commands.FingerprintCommand.java">com/redhat/victims/commands/FingerprintCommand.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  46
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.VictimsRule.java">com/redhat/victims/VictimsRule.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  72
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.commands.ExecutionContext.java">com/redhat/victims/commands/ExecutionContext.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  37
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.IOUtils.java">com/redhat/victims/IOUtils.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  94
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.commands.Command.java">com/redhat/victims/commands/Command.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  12
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.ArtifactLocator.java">com/redhat/victims/ArtifactLocator.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  52
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.Resources.java">com/redhat/victims/Resources.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  128
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.db.Statements.java">com/redhat/victims/db/Statements.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  18
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.Checksum.java">com/redhat/victims/Checksum.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  13
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.Settings.java">com/redhat/victims/Settings.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  128
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.db.Database.java">com/redhat/victims/db/Database.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  279
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.VictimsException.java">com/redhat/victims/VictimsException.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  16
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.Synchronizer.java">com/redhat/victims/Synchronizer.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  69
+                </td>
+              </tr>
+                          <tr>
+                <td>
+                  <a href="http://gcmurphy.github.com/enforce-victims-plugin/checkstyle.html#com.redhat.victims.db.Statement.java">com/redhat/victims/db/Statement.java</a>
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  0
+                </td>
+                <td>
+                  10
+                </td>
+              </tr>
+                      </tbody>
+        </table>
+        
+      </description>
+    </item>
+  </channel>
+</rss>
+
