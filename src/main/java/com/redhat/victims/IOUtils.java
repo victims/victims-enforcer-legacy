@@ -37,6 +37,13 @@ import org.json.JSONObject;
  */
 public final class IOUtils {
 
+   /**
+    * Repeats a character n times. \
+    * 
+    * @param c charater to repeat n times
+    * @param n the number of times to repeat the character
+    * @return The string value of c * n
+    */
    public static String repeat(char c, int n) {
 
         StringBuilder buf = new StringBuilder();
