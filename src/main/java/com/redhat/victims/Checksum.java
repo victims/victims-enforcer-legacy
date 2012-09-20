@@ -32,6 +32,8 @@ import org.apache.commons.codec.binary.Hex;
  */
 public final class Checksum {
 
+    private Checksum() {}
+
     /**
      * Creates a SHA-512 checksum from the content provided in the specified
      * InputStream.

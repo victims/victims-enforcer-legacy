@@ -24,18 +24,18 @@ import org.json.JSONObject;
  * @author gmurphy
  */
 public class MetadataCommandTest extends TestCase {
-    
-    Database db; 
+
+    Database db;
     public MetadataCommandTest(String testName) {
-        super(testName);     
+        super(testName);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        db = new Database("test.db"); 
-        JSONObject json = new JSONObject(); 
+
+        db = new Database("test.db");
+        JSONObject json = new JSONObject();
         json.put("cves", "CVE-TEST-ONLY");
         json.put("hash", "8e6f9fa5eb3ba93a8b1b5a39e01a81c142b33078264dbd0a2030d60dd26735407249a12e66f5cdcab8056e93a5687124fe66e741c233b4c7a06cc8e49f82e98b");
         json.put("db_version", 0);
@@ -44,7 +44,7 @@ public class MetadataCommandTest extends TestCase {
         json.put("name", "junit");
         db.executeStatement(Statements.INSERT, json);
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -59,7 +59,7 @@ public class MetadataCommandTest extends TestCase {
                         db.executeStatement(Statements.REMOVE, next);
                     }
                 }
-                
+
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
@@ -67,8 +67,8 @@ public class MetadataCommandTest extends TestCase {
     }
 
     public void testExecute() throws Exception {
-       
-        try { 
+
+        try {
             System.out.println("execute");
 
             ArtifactHandler handler = new DefaultArtifactHandler();
@@ -82,25 +82,25 @@ public class MetadataCommandTest extends TestCase {
             ctx.setArtifact(testArtifact);
             ctx.setDatabase(db);
             ctx.setLog(log);
-        
+
             MetadataCommand cmd = new MetadataCommand();
             config.set(Settings.Metadata, Settings.ModeDisabled);
             ctx.setSettings(config);
             cmd.execute(ctx);
-            
+
             config.set(Settings.Metadata, Settings.ModeWarning);
             ctx.setSettings(config);
             cmd.execute(ctx);
-            
+
             config.set(Settings.Metadata, Settings.ModeFatal);
             ctx.setSettings(config);
             cmd.execute(ctx);
-        
-        } catch(Exception e){
+
+        } catch(Exception e) {
             System.err.println(e.getMessage());
             assertTrue(e instanceof EnforcerRuleException);
         }
-        
+
     }
 
     public void testGetDefaultExecutionMode() {
@@ -109,6 +109,6 @@ public class MetadataCommandTest extends TestCase {
         String expResult = Settings.ModeWarning;
         String result = instance.getDefaultExecutionMode();
         assertEquals(expResult, result);
-      
+
     }
 }

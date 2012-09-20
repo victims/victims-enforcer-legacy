@@ -18,7 +18,11 @@
  */
 package com.redhat.victims;
 
-import java.io.*;
+import java.io.File;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -30,6 +34,8 @@ import org.apache.maven.artifact.Artifact;
  * @author gmurphy
  */
 public final class ArtifactLocator {
+
+    private ArtifactLocator() {};
 
     /**
      * Attempts to resolve a remote Maven artifact and return an stream to its

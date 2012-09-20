@@ -38,8 +38,8 @@ import org.json.JSONObject;
 public final class IOUtils {
 
    /**
-    * Repeats a character n times. 
-    * 
+    * Repeats a character n times.
+    *
     * @param c charater to repeat n times
     * @param n the number of times to repeat the character
     * @return The string value of c * n
