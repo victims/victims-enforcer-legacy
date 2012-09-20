@@ -7,7 +7,7 @@
   <packaging>jar</packaging>
   <name>enforce-victims-rule</name>
   <description>Checks a Maven projects dependencies against a database of known vulnerable artifacts.</description>
-  <url>https://victims-websec.rhcloud.com</url>
+  <url>http://gcmurphy.github.com/enforce-victims-plugin</url>
   <licenses>
     <license>
         <name>GNU General Public License, Version 3</name>
