@@ -74,11 +74,11 @@ public class FingerprintCommandTest extends TestCase {
 
         Log log = new SystemStreamLog();
         Settings config = new Settings();
-        config.set(Settings.Fingerprint, Settings.ModeFatal);
-        config.set(Settings.DatabasePath, ".victims");
-        config.set(Settings.Metadata, Settings.ModeWarning);
+        config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
+        config.set(Settings.DATABASE_PATH, ".victims");
+        config.set(Settings.METADATA, Settings.MODE_WARNING);
         config.set(Settings.URL, "http://www.dummy.com/service/v1");
-        config.set(Settings.UpdateDatabase, "auto");
+        config.set(Settings.UPDATE_DATABASE, "auto");
         config.validate();
 
 
@@ -89,15 +89,15 @@ public class FingerprintCommandTest extends TestCase {
         ctx.setSettings(config);
 
         FingerprintCommand cmd = new FingerprintCommand();
-        config.set(Settings.Fingerprint, Settings.ModeDisabled);
+        config.set(Settings.FINGERPRINT, Settings.MODE_DISABLED);
         ctx.setSettings(config);
         cmd.execute(ctx);
 
-        config.set(Settings.Fingerprint, Settings.ModeWarning);
+        config.set(Settings.FINGERPRINT, Settings.MODE_WARNING);
         ctx.setSettings(config);
         cmd.execute(ctx);
 
-        config.set(Settings.Fingerprint, Settings.ModeFatal);
+        config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
         ctx.setSettings(config);
         cmd.execute(ctx);
 
@@ -114,7 +114,7 @@ public class FingerprintCommandTest extends TestCase {
     public void testGetDefaultExecutionMode() {
         System.out.println("getDefaultExecutionMode");
         FingerprintCommand instance = new FingerprintCommand();
-        String expResult = com.redhat.victims.Settings.ModeFatal;
+        String expResult = com.redhat.victims.Settings.MODE_FATAL;
         String result = instance.getDefaultExecutionMode();
         assertEquals(expResult, result);
     }

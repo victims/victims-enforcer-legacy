@@ -26,37 +26,115 @@ import java.util.ListResourceBundle;
  */
 public class Resources extends ListResourceBundle  {
 
-    /** Fingerprint command messages */
+    /** The format for the message shown if a vulnerable
+     * artifact is detected by fingerprint.
+     */
     public static final String INFO_FINGERPRINT_HEADING     = "INFO_FINGERPRINT_HEADING";
+
+    /**
+     * The message shown if a vulnerable artifact is
+     * detected by fingerprint and rule is operating in FATAL mode.
+     */
     public static final String FATAL_FINGERPRINT_BODY       = "FATAL_FINGERPRINT_BODY";
+
+    /**
+     * The heading shown above the fatal body message.
+     */
     public static final String FATAL_FINGERPRINT_HEADING    = "FATAL_FINGERPRINT_HEADING";
 
-    /** Metadata command messages */
+    /**
+     * The message shown if a vulnerable artifact is detected by metadata.
+     */
     public static final String INFO_METADATA_HEADING        = "INFO_METADATA_HEADING";
+
+    /**
+     * Information shown that links meta data in an artifact
+     * to the entry within the database.
+     */
     public static final String INFO_METADATA_BODY           = "INFO_METADATA_BODY";
+
+    /**
+     * Heading shown when a metadata match is found and rule
+     * considers this to be a fatal error.
+     */
     public static final String FATAL_METADATA_HEADING       = "FATAL_METADATA_HEADING";
+
+    /**
+     * The message shown when a metadata match is found and rule
+     * considers this to be a fatal error.
+     */
     public static final String FATAL_METADATA_BODY          = "FATAL_METADATA_BODY";
 
-    /* Synchronization messages */
+
+    /**
+     * Format of message for displaying the current database version.
+     */
     public static final String INFO_DATABASE_VERSION        = "INFO_DATABASE_VERSION";
+
+    /**
+     * Format of message shown when database version has been updated.
+     */
     public static final String INFO_NEW_DATABASE_VERSION    = "INFO_NEW_DATABASE_VERSION";
+
+    /**
+     * Details how many new items were added to the database.
+     */
     public static final String INFO_ITEMS_ADDED             = "INFO_ITEMS_ADDED";
+
+    /**
+     * Details how many items are removed from the database.
+     */
     public static final String INFO_ITEMS_REMOVED           = "INFO_ITEMS_REMOVED";
+
+    /**
+     * Message to indicate synchronization to the database.
+     */
     public static final String INFO_PERFORMING_SYNC         = "INFO_PERFORMING_SYNC";
 
-    /* Setting information messages */
+
+    /**
+     * Heading shown when displaying settings.
+     */
     public static final String INFO_SETTINGS_HEADING        = "INFO_SETTINGS_HEADING";
 
-    /* Successful run message */
+    /**
+     * Shown when rule ran without finding an error.
+     */
     public static final String INFO_NO_VULNERABILTIES_FOUND = "INFO_NO_VULNERABILTIES_FOUND";
 
-    /* Error messages */
+    /**
+     * Error shown if supplied JSON object does not contain required keys.
+     */
     public static final String ERR_MALFORMED_JSON           = "ERR_MALFORMED_JSON";
+
+    /**
+     * Error shown if there is an error querying the database.
+     */
     public static final String ERR_INVALID_SQL_STATEMENT    = "ERR_INVALID_SQL_STATEMENT";
+
+    /**
+     * Error shown if there is an issue synchronizing with the database.
+     */
     public static final String ERR_SYNCHRONIZATION_FAILURE  = "ERR_SYNCHRONIZATION_FAILURE";
+
+    /**
+     * Error shown if cannot resolve the physical artifact in the project.
+     */
     public static final String ERR_ARTIFACT_NOT_FOUND       = "ERR_ARTIFACT_NOT_FOUND";
+
+    /**
+     * Configuration error.
+     */
     public static final String ERR_SETTING_MISSING          = "ERR_SETTING_MISSING";
+
+    /**
+     * Configuration error - Invalid URL.
+     */
     public static final String ERR_INVALID_URL              = "ERR_INVALID_URL";
+
+    /**
+     * Configuration error - Invalid mode of operation.
+     */
     public static final String ERR_INVALID_MODE             = "ERR_INVALID_MODE";
 
 
@@ -99,5 +177,4 @@ public class Resources extends ListResourceBundle  {
             { INFO_NO_VULNERABILTIES_FOUND, "No vulnerable artifacts were detected in this project."            }
         };
     }
-
 }

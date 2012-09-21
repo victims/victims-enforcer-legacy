@@ -21,12 +21,10 @@ package com.redhat.victims.commands;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 
 /**
- *
+ * Interface for each command executed by this rule.
  * @author gmurphy
  */
 public interface Command {
-
     public void execute(ExecutionContext ctx) throws EnforcerRuleException;
-
     public String getDefaultExecutionMode();
 }

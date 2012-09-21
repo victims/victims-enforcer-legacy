@@ -19,7 +19,12 @@
  */
 package com.redhat.victims;
 
-import java.io.*;
+import java.io.File;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.BufferedReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
@@ -44,7 +49,7 @@ public final class IOUtils {
     * @param n the number of times to repeat the character
     * @return The string value of c * n
     */
-    public static String repeat(char c, int n) {
+    public static String repeat(final char c, final int n) {
 
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < n; i++) {
@@ -59,7 +64,7 @@ public final class IOUtils {
      * @param word The word to put in the box
      * @return String formated to contain the word in an ASCII box.
      */
-    public static String box(String word) {
+    public static String box(final String word) {
 
         StringBuilder buf = new StringBuilder();
         buf.append(String.format("%n"));
@@ -84,8 +89,10 @@ public final class IOUtils {
      *
      * @param amount The number of spaces to input text by.
      * @param str The string to indent.
+     * @return An string indented by specified amount after each newline.
+     *
      */
-    public static String indent(int amount, String str) {
+    public static String indent(final int amount, final String str) {
 
         StringBuilder buf = new StringBuilder();
         StringTokenizer toks = new StringTokenizer(str, "\n");
@@ -100,11 +107,11 @@ public final class IOUtils {
     /**
      * Wraps lines of text in accordance to specified arguments.
      *
-     * @param len The length to wrap the text at
+     * @param limit The length to wrap the text at
      * @param str The string to wrap
      * @return A string that has been wrapped to fit the specified length
      */
-    public static String wrap(int limit, String str) {
+    public static String wrap(final int limit, final String str) {
 
         StringBuilder buf = new StringBuilder();
         int pos = 0;
@@ -147,14 +154,14 @@ public final class IOUtils {
     }
 
     /**
-     * Truncate a line of text to 'n' characters
+     * Truncate a line of text to 'n' characters.
      *
      * @param n Number of characters allowed before truncating the rest of
      * input.
      * @param str The string to be truncated if necessary
-     * @return
+     * @return A truncated string ending in ...
      */
-    public static String truncate(int n, String str) {
+    public static String truncate(final int n, final String str) {
 
         if (str.length() <= n) {
             return str;
@@ -170,10 +177,12 @@ public final class IOUtils {
      * @param o - The JSON object to be printed
      * @return - Pretty formated string of JSON content
      */
-    public static String prettyPrint(String title, JSONObject o) {
+    public static String prettyPrint(final String title, final JSONObject o) {
 
+        int indenting = 15;
+        int wrapping  = 48;
+        String formatting = "%12s : %-16s%n";
         StringBuilder sb = new StringBuilder();
-
         Iterator i = o.keys();
 
         if (i.hasNext()) {
@@ -184,9 +193,8 @@ public final class IOUtils {
             try {
 
                 String key = (String) i.next();
-                String fmt = "%12s : %-16s%n";
-                String val = indent(15, wrap(48, String.valueOf(o.get(key))));
-                sb.append(String.format(fmt, key, val));
+                String val = indent(indenting, wrap(wrapping, String.valueOf(o.get(key))));
+                sb.append(String.format(formatting, key, val));
 
             } catch (JSONException e) {
                 sb.append("Invalid format of JSON object: ").append(o.toString()).append(String.format("%n"));
@@ -201,9 +209,10 @@ public final class IOUtils {
      *
      * @param f - UTF8 encoded file to read content from.
      * @return The content of the specified file.
-     * @throws IOException
+     * @throws IOException Is thrown if unable to read the file.
+     * @return The entire file content as a string
      */
-    public static String slurp(File f) throws IOException {
+    public static String slurp(final File f) throws IOException {
 
         String line;
         StringBuilder buffer = new StringBuilder();
@@ -234,9 +243,9 @@ public final class IOUtils {
      *
      * @param key The key from the resource bundle.
      * @param args The arguments to pass to the message formatter.
-     * @return
+     * @return Returns a formated string using a format specified in the Resource bundle.
      */
-    public static String fmt(String key, Object... args) {
+    public static String fmt(final String key, final Object... args) {
 
         ResourceBundle bundle = ResourceBundle.getBundle("com.redhat.victims.Resources");
         String formatting = bundle.getString(key);
@@ -251,12 +260,12 @@ public final class IOUtils {
      * @param mode The mode which determines which log method is invoked.
      * @param msg The message to send to the log.
      */
-    public static void report(Log l, String mode, String msg) {
+    public static void report(final Log l, final String mode, final String msg) {
 
         String level;
-        if (mode.equals(Settings.ModeFatal)) {
+        if (mode.equals(Settings.MODE_FATAL)) {
             level = "error";
-        } else if (mode.equals(Settings.ModeWarning)) {
+        } else if (mode.equals(Settings.MODE_WARNING)) {
             level = "warn";
         } else {
             level = "info";

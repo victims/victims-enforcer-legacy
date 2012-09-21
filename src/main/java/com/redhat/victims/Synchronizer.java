@@ -39,20 +39,31 @@ public class Synchronizer {
     private String baseURL;
     private Log log;
 
+    /**
+     * Creates a new synchronizer instance that will attempt to
+     * retrieve updates from the supplied URL.
+     * @param url The url to synchronize to.
+     */
     public Synchronizer(String url) {
         this(url, new SystemStreamLog());
     }
 
+    /**
+     * Creates a new synchronizer instance that will attempt to
+     * retreive updates from the supplied URL.
+     * @param url The url to synchronize to.
+     * @param log The log to send messages to.
+     */
     public Synchronizer(String url, Log l) {
         baseURL = url;
         log = l;
     }
 
-    private String getUpdateURL(int version) {
+    private String getUpdateURL(final int version) {
         return String.format("%s/update/%d", baseURL, version);
     }
 
-    private String getObseleteURL(int version) {
+    private String getObseleteURL(final int version) {
         return String.format("%s/remove/%d", baseURL, version);
     }
 
@@ -60,13 +71,13 @@ public class Synchronizer {
      * Actual synchronization mechanism abstraction as essentially does the same
      * thing for update / delete.
      *
-     * @param db
-     * @param q
-     * @param url
-     * @return
-     * @throws Exception
+     * @param db The database to update.
+     * @param q  The statement (update / insert) to perform on the database.
+     * @param url The url to make the request to.
+     * @return The number of entries that were updated.
+     * @throws Exception Thrown if a bad response is receieved from the server.
      */
-    private int sync(Database db, Statements q, String url) throws Exception {
+    private int sync(Database db, Statements q, final String url) throws Exception {
 
         int modified = 0;
         HttpMethod get = new GetMethod(url);
@@ -92,7 +103,7 @@ public class Synchronizer {
      * content available from the Red Hat Security Response Team.
      *
      * @param db The database to be updated
-     * @throws VictimsException
+     * @throws VictimsException If the synchronization operation failed.
      */
     public void synchronizeDatabase(Database db) throws VictimsException {
 

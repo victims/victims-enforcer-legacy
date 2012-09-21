@@ -378,7 +378,7 @@ public class Database {
      * @param result Create a flag in the JSON to indicate whether the database
      * query was successful.
      * @param obj An existing JSON object to copy attributes from. Can be null.
-     * @return
+     * @return A JSONObject populated with the default result values.
      * @throws JSONException
      */
     private JSONObject createResultJSON(boolean result, JSONObject obj) throws JSONException {
@@ -402,8 +402,8 @@ public class Database {
      * @param keys Whitelist of keys to include in the JSON object
      * @param rs The SQL results to convert to JSON format
      * @return The JSONObject with the converted content
-     * @throws SQLException
-     * @throws JSONException
+     * @throws SQLException Occurs when unable to retrieve expected value from the database results.
+     * @throws JSONException Occurs when attempting to insert an invalid value into the JSON.
      */
     private static JSONObject marshal(String[] keys, ResultSet rs) throws SQLException, JSONException {
 
@@ -419,7 +419,7 @@ public class Database {
      * Creates a connection to an embedded Apache Derby instance. If the
      * database does not exist it is created.
      *
-     * @throws SQLException
+     * @throws SQLException When unable to connect to database.
      */
     private void connect() throws SQLException {
 
@@ -456,7 +456,7 @@ public class Database {
     /**
      * Closes the connection to the database
      *
-     * @throws SQLException
+     * @throws SQLException If unable to disconneect cleanly.
      */
     private void disconnect() throws SQLException {
         connection.close();
@@ -483,7 +483,7 @@ public class Database {
      * @param id A type of query operation to perform.
      * @return The corresponding statement that can be executed in a
      * transaction.
-     * @throws VictimsException
+     * @throws VictimsException Occurs if an invalid statement is supplied.
      */
     private Statement resolveStatement(Statements id) throws VictimsException {
 
@@ -501,7 +501,8 @@ public class Database {
                 return containsJAR();
             case VERSION:
                 return version();
+            default:
+                throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_SQL_STATEMENT));
         }
-        throw new VictimsException("Unsupported statement requested", null);
     }
 }

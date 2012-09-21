@@ -18,12 +18,32 @@
  */
 package com.redhat.victims.db;
 
+/**
+ * Restriction of types of requests that can be made to the database.
+ */
 public enum Statements {
 
+    /** Insert a JSON object into the database */
     INSERT,
+
+    /** Remove a JSON object from the database */
     REMOVE,
+
+    /** List all entries within the database */
     LIST,
+
+    /** Check the database for an occurrence of the supplied hash */
     CHECK_HASH,
+
+    /**
+     * Check the database for an occurrence of an artifact
+     * matching the supplied pattern.
+     */
     CHECK_JAR,
+
+    /**
+     * Determine the newestt version of the database that
+     * is stored within this database
+     */
     VERSION
 };

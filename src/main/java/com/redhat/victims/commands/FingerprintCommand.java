@@ -28,12 +28,11 @@ import org.json.JSONObject;
 
 /**
  * The fingerprint command resolves the supplied artifact and compares the
- * fingerprint of that item to entries within a database of vulnerable artifacts
- * .
+ * fingerprint of that item to entries within a database of vulnerable artifacts.
  *
  * @author gmurphy
  */
-public class FingerprintCommand implements Command {
+public final class FingerprintCommand implements Command {
 
     public void execute(ExecutionContext ctx) throws EnforcerRuleException {
 
@@ -49,10 +48,10 @@ public class FingerprintCommand implements Command {
 
                 String heading = IOUtils.fmt(Resources.INFO_FINGERPRINT_HEADING);
                 String info = IOUtils.prettyPrint(heading, rs.getJSONObject("item"));
-                String mode = ctx.getSettings().get(Settings.Fingerprint);
+                String mode = ctx.getSettings().get(Settings.FINGERPRINT);
                 IOUtils.report(ctx.getLog(), mode, info);
 
-                if (ctx.getSettings().inFatalMode(Settings.Fingerprint)) {
+                if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)) {
 
                     String id = ctx.getArtifact().getId();
                     String file = ctx.getArtifact().getFile().getAbsolutePath();
@@ -79,6 +78,6 @@ public class FingerprintCommand implements Command {
     }
 
     public String getDefaultExecutionMode() {
-        return Settings.ModeFatal;
+        return Settings.MODE_FATAL;
     }
 }

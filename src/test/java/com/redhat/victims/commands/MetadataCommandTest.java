@@ -84,15 +84,15 @@ public class MetadataCommandTest extends TestCase {
             ctx.setLog(log);
 
             MetadataCommand cmd = new MetadataCommand();
-            config.set(Settings.Metadata, Settings.ModeDisabled);
+            config.set(Settings.METADATA, Settings.MODE_DISABLED);
             ctx.setSettings(config);
             cmd.execute(ctx);
 
-            config.set(Settings.Metadata, Settings.ModeWarning);
+            config.set(Settings.METADATA, Settings.MODE_WARNING);
             ctx.setSettings(config);
             cmd.execute(ctx);
 
-            config.set(Settings.Metadata, Settings.ModeFatal);
+            config.set(Settings.METADATA, Settings.MODE_FATAL);
             ctx.setSettings(config);
             cmd.execute(ctx);
 
@@ -106,7 +106,7 @@ public class MetadataCommandTest extends TestCase {
     public void testGetDefaultExecutionMode() {
         System.out.println("getDefaultExecutionMode");
         MetadataCommand instance = new MetadataCommand();
-        String expResult = Settings.ModeWarning;
+        String expResult = Settings.MODE_WARNING;
         String result = instance.getDefaultExecutionMode();
         assertEquals(expResult, result);
 

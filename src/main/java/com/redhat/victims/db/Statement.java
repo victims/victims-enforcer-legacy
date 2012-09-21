@@ -22,7 +22,17 @@ import java.sql.SQLException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public interface Statement {
 
+/**
+ * Abstraction used within the database to query the database.
+ */
+interface Statement {
+    /**
+     * The executes the query on the database.
+     * @param o The data to use within the database query.
+     * @return A converted result set that has been marshaled to JSON.
+     * @throws SQLException If a database error occurs.
+     * @throws JSONException If the supplied JSON object is missing a required key.
+     */
     public JSONObject execute(JSONObject o) throws SQLException, JSONException;
 }

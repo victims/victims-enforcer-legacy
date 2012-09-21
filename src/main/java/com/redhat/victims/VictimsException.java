@@ -25,13 +25,20 @@ package com.redhat.victims;
  */
 public class VictimsException extends Exception {
 
+    /**
+     * Create a new exception with the supplied error.
+     * @param message The message to associate with this exception.
+     */
     public VictimsException(String message) {
         super(message);
     }
 
+    /**
+     * Creates a new exception with the supplied message and cause.
+     * @param message The message to associate with this error.
+     * @param e The underlying cause of the exception.
+     */
     public VictimsException(String message, Throwable e) {
-
         super(message, e);
-
     }
 }

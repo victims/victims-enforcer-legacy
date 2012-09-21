@@ -45,10 +45,10 @@ public class VictimsRule implements EnforcerRule {
      * Configuration options available in pom.xml
      */
     private String url = Settings.defaults.get(Settings.URL);
-    private String metadata = Settings.defaults.get(Settings.Metadata);
-    private String fingerprint = Settings.defaults.get(Settings.Fingerprint);
-    private String path = Settings.defaults.get(Settings.DatabasePath);
-    private String updates = Settings.defaults.get(Settings.UpdateDatabase);
+    private String metadata = Settings.defaults.get(Settings.METADATA);
+    private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
+    private String path = Settings.defaults.get(Settings.DATABASE_PATH);
+    private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
 
     /*
      * Checks performed as a part of this rule
@@ -73,15 +73,15 @@ public class VictimsRule implements EnforcerRule {
             // Create and validate settings
             Settings setup = new Settings();
             setup.set(Settings.URL, url);
-            setup.set(Settings.Metadata, metadata);
-            setup.set(Settings.Fingerprint, fingerprint);
-            setup.set(Settings.DatabasePath, path);
-            setup.set(Settings.UpdateDatabase, updates);
+            setup.set(Settings.METADATA, metadata);
+            setup.set(Settings.FINGERPRINT, fingerprint);
+            setup.set(Settings.DATABASE_PATH, path);
+            setup.set(Settings.UPDATE_DATABASE, updates);
             setup.validate();
             setup.show(log);
 
             // Create database instance
-            Database db = new Database(setup.get(Settings.DatabasePath));
+            Database db = new Database(setup.get(Settings.DATABASE_PATH));
 
             // Synchronize it with the server
             if (setup.updatesEnabled()) {

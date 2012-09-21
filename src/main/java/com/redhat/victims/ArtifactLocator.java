@@ -35,7 +35,12 @@ import org.apache.maven.artifact.Artifact;
  */
 public final class ArtifactLocator {
 
-    private ArtifactLocator() {};
+    /**
+     * Disabled constructor in utility class.
+     */
+    private ArtifactLocator() {
+        // Not used
+    }
 
     /**
      * Attempts to resolve a remote Maven artifact and return an stream to its
@@ -43,9 +48,9 @@ public final class ArtifactLocator {
      *
      * @param a Artifact to resolve.
      * @return An input stream to that artifact.
-     * @throws VictimsException
+     * @throws VictimsException Thrown if unable to read HTTP response
      */
-    public static InputStream resolveRemoteArtifact(Artifact a) throws VictimsException {
+    public static InputStream resolveRemoteArtifact(final Artifact a) throws VictimsException {
 
         try {
             HttpMethod get = new GetMethod(a.getDownloadUrl());
@@ -67,9 +72,9 @@ public final class ArtifactLocator {
      *
      * @param a The artifact to resolve.
      * @return InputStream that for the artifact file content.
-     * @throws VictimsException
+     * @throws VictimsException Thrown if unable to find artificat file
      */
-    public static InputStream resolveLocalArtifact(Artifact a) throws VictimsException {
+    public static InputStream resolveLocalArtifact(final Artifact a) throws VictimsException {
 
         // Should exist locally if is in the pom.xml
         try {
@@ -87,16 +92,16 @@ public final class ArtifactLocator {
      *
      * @param a Artifact to search for.
      * @return A stream to the artifacts content
-     * @throws VictimsException
+     * @throws VictimsException Thrown if unable to locate artifact
+     *                          by either methods.
      */
-    public static InputStream locate(Artifact a) throws VictimsException {
+    public static InputStream locate(final Artifact a) throws VictimsException {
 
         try {
             return resolveLocalArtifact(a);
         } catch (VictimsException e) {
             return resolveRemoteArtifact(a);
         }
-
 
     }
 }

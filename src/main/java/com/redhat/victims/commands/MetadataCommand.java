@@ -35,7 +35,7 @@ import org.json.JSONObject;
  *
  * @author gmurphy
  */
-public class MetadataCommand implements Command {
+public final class MetadataCommand implements Command {
 
     public void execute(ExecutionContext ctx) throws EnforcerRuleException {
 
@@ -50,7 +50,7 @@ public class MetadataCommand implements Command {
 
             if (rs.getBoolean("result") && rs.has("collection")) {
 
-                String mode = ctx.getSettings().get(Settings.Metadata);
+                String mode = ctx.getSettings().get(Settings.METADATA);
                 String info = IOUtils.fmt(Resources.INFO_METADATA_HEADING);
                 IOUtils.report(ctx.getLog(), mode, info);
 
@@ -66,7 +66,7 @@ public class MetadataCommand implements Command {
 
                 }
 
-                if (ctx.getSettings().inFatalMode(Settings.Metadata)) {
+                if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
 
                     StringBuilder err = new StringBuilder();
                     err.append(IOUtils.box(IOUtils.fmt(Resources.FATAL_METADATA_HEADING)));
@@ -84,6 +84,6 @@ public class MetadataCommand implements Command {
     }
 
     public String getDefaultExecutionMode() {
-        return Settings.ModeWarning;
+        return Settings.MODE_WARNING;
     }
 }

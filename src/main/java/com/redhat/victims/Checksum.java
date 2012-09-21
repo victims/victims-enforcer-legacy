@@ -32,7 +32,12 @@ import org.apache.commons.codec.binary.Hex;
  */
 public final class Checksum {
 
-    private Checksum() {}
+    /**
+     * Disable constructor on utility class
+     */
+    private Checksum() {
+        // Not used
+    }
 
     /**
      * Creates a SHA-512 checksum from the content provided in the specified
@@ -41,10 +46,10 @@ public final class Checksum {
      * @param is The input data to hash
      * @return The HEX encoded SHA-512 of the data retrieved from the input
      * stream.
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
+     * @throws NoSuchAlgorithmException Thrown if JRE doesn't have an SHA-512 algorithm
+     * @throws IOException Thrown if an error occurs reading from the supplied input stream
      */
-    public static String sha512(InputStream is) throws NoSuchAlgorithmException, IOException {
+    public static String sha512(final InputStream is) throws NoSuchAlgorithmException, IOException {
 
         int nbytes;
         byte[] buf = new byte[1024];
