@@ -7,9 +7,11 @@ a database of artifacts with publicly known Common Vulnerabilities and Exposures
 (CVE). The canoical version of the database is hosted at https://victims-websec.rhcloud.com
 and is maintained by Red Hat's Security Response Team (SRT). 
 
+## Getting Started
 
-Example pom.xml
-===============
+A sample project and configuration instructions are avaiable [here](http://people.redhat.com/~gmurphy/projects/victims.html)
+
+## Example pom.xml
 ```
   <project>
     ...
