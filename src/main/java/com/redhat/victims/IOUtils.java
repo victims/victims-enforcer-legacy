@@ -20,11 +20,11 @@
 package com.redhat.victims;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
@@ -236,6 +236,7 @@ public final class IOUtils {
             }
         }
     }
+    
 
     /**
      * Formats a message appropriately based on the resource bundle key
@@ -282,5 +283,26 @@ public final class IOUtils {
         } catch (InvocationTargetException e) {
             l.error(e);
         }
+    }
+    
+    /**
+     * Essentially ["A", "B", "C"].join(":") -> "A:B:C"
+     * 
+     * @param bread The thing to join together 
+     * @param jam  The glue sticking things together. 
+     * @return 
+     */
+    public static String sandwich(String []bread, String jam){
+        
+        int elems = bread.length;
+        StringBuilder sb = new StringBuilder();
+      
+        for (String str : bread){
+            sb.append(str);
+            if (elems-- > 1)
+                sb.append(jam);
+        }
+        
+        return sb.toString();
     }
 }

@@ -18,6 +18,7 @@
  */
 package com.redhat.victims.commands;
 
+import com.redhat.victims.hash.Hash;
 import com.redhat.victims.*;
 import com.redhat.victims.db.Statements;
 import java.io.IOException;
@@ -38,7 +39,7 @@ public final class FingerprintCommand implements Command {
 
         try {
 
-            String hash = Checksum.sha512(ArtifactLocator.locate(ctx.getArtifact()));
+            String hash = Hash.hash("SHA-512", ArtifactLocator.locate(ctx.getArtifact()));
 
             JSONObject q = new JSONObject();
             q.put("hash", hash);

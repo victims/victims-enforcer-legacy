@@ -16,7 +16,7 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims;
+package com.redhat.victims.hash;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,32 +30,23 @@ import org.apache.commons.codec.binary.Hex;
  *
  * @author gmurphy
  */
-public final class Checksum {
+public final class Hash {
 
     /**
      * Disable constructor on utility class
      */
-    private Checksum() {
+    private Hash() {
         // Not used
     }
 
-    /**
-     * Creates a SHA-512 checksum from the content provided in the specified
-     * InputStream.
-     *
-     * @param is The input data to hash
-     * @return The HEX encoded SHA-512 of the data retrieved from the input
-     * stream.
-     * @throws NoSuchAlgorithmException Thrown if JRE doesn't have an SHA-512 algorithm
-     * @throws IOException Thrown if an error occurs reading from the supplied input stream
-     */
-    public static String sha512(final InputStream is) throws NoSuchAlgorithmException, IOException {
+    public static String hash(String algorithm, final InputStream is)
+            throws NoSuchAlgorithmException, IOException {
 
         int nbytes;
         byte[] buf = new byte[1024];
         byte[] digest;
 
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
 
         while ((nbytes = is.read(buf)) > 0) {
             md.update(buf, 0, nbytes);
@@ -64,6 +55,7 @@ public final class Checksum {
         digest = md.digest().clone();
 
         return new String(Hex.encodeHex(digest));
-
     }
+
+  
 }
