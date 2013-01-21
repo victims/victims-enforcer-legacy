@@ -55,6 +55,8 @@ public final class Settings {
     public static final String FINGERPRINT      = "fingerprint";
     public static final String DATABASE_PATH    = "path";
     public static final String UPDATE_DATABASE  = "updates";
+    public static final String DATABASE_DRIVER  = "driver";
+    public static final String DATABASE_CONNECT_URL = "jdbc:derby:%s;create=true";
     /**
      * Reasonably sensible defaults
      */
@@ -66,6 +68,8 @@ public final class Settings {
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
         mappings.put(DATABASE_PATH, ".victims");
+        mappings.put(DATABASE_CONNECT_URL, "jdbc:derby:.victims;create=true");
+        mappings.put(DATABASE_DRIVER, "org.apache.derby.jdbc.EmbeddedDriver");
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
         defaults = Collections.unmodifiableMap(mappings);
     }

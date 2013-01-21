@@ -16,16 +16,20 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims.archive;
+package com.redhat.victims.db.json;
 
-import java.io.InputStream;
-import org.json.JSONObject;
+import java.util.Map;
 
 /**
- * 
+ *
  * @author gm
  */
-interface JarVisitor {
-    void visit(String name, InputStream entry);
-    JSONObject getInformation();
+public class HashRecord {
+    
+    public HashRecord(){
+        files = new java.util.HashMap<String, String>();
+    }
+    
+    public String combined;
+    public Map<String, String> files;
 }

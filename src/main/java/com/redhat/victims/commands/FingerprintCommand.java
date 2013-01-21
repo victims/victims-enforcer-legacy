@@ -38,8 +38,11 @@ public final class FingerprintCommand implements Command {
     public void execute(ExecutionContext ctx) throws EnforcerRuleException {
 
         try {
-
+            
+            
+            
             String hash = Hash.hash("SHA-512", ArtifactLocator.locate(ctx.getArtifact()));
+            
 
             JSONObject q = new JSONObject();
             q.put("hash", hash);

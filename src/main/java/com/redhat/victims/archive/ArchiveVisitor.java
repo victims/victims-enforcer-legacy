@@ -18,36 +18,14 @@
  */
 package com.redhat.victims.archive;
 
-
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.io.InputStream;
+import org.json.JSONObject;
 
 /**
  * 
  * @author gm
  */
-public class Jar {
-   
-    private ZipFile jarfile;
-    
-    public Jar(ZipFile jarfile){
-        this.jarfile = jarfile;
-    }   
-    
-    /**
-     * @param visitor
-     */
-    public final void accept(JarVisitor visitor) throws IOException {
-   
-        Enumeration<? extends ZipEntry> enumerable;
-        for (enumerable = jarfile.entries(); enumerable.hasMoreElements();){
-            ZipEntry entry = enumerable.nextElement();
-            visitor.visit(entry.getName(), jarfile.getInputStream(entry));
-        }
-    }
-    
-  
-    
+public interface ArchiveVisitor {
+    public void visit(String name, InputStream entry);
+    public JSONObject result();
 }

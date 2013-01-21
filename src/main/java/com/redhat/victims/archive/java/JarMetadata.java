@@ -16,8 +16,9 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims.archive;
+package com.redhat.victims.archive.java;
 
+import com.redhat.victims.archive.ArchiveVisitor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,11 +34,11 @@ import org.json.JSONObject;
  * 
  * @author gm
  */
-class MetadataVisitor implements JarVisitor {
+public class JarMetadata implements ArchiveVisitor {
     
     private JSONObject metadata;
     
-    public MetadataVisitor(){
+    public JarMetadata(){
         metadata = new JSONObject();
     }
    
@@ -127,7 +128,7 @@ class MetadataVisitor implements JarVisitor {
      * Retrieve the detected metadata that has been gathered by this visitor.  
      * @return 
      */
-    public JSONObject getInformation(){
+    public JSONObject result(){
         return metadata;
     }
     

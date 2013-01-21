@@ -48,6 +48,7 @@ public class VictimsRule implements EnforcerRule {
     private String metadata = Settings.defaults.get(Settings.METADATA);
     private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
     private String path = Settings.defaults.get(Settings.DATABASE_PATH);
+    private String driver = Settings.defaults.get(Settings.DATABASE_DRIVER);
     private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
 
     /*
@@ -77,11 +78,15 @@ public class VictimsRule implements EnforcerRule {
             setup.set(Settings.FINGERPRINT, fingerprint);
             setup.set(Settings.DATABASE_PATH, path);
             setup.set(Settings.UPDATE_DATABASE, updates);
+            setup.set(Settings.DATABASE_DRIVER, driver);
             setup.validate();
             setup.show(log);
 
             // Create database instance
-            Database db = new Database(setup.get(Settings.DATABASE_PATH));
+            String path = setup.get(Settings.DATABASE_PATH);
+            String driver = setup.get(Settings.DATABASE_DRIVER);
+            String url = setup.get(Settings.DATABASE_CONNECT_URL);
+            Database db = new Database(path, driver, url);
 
             // Synchronize it with the server
             if (setup.updatesEnabled()) {

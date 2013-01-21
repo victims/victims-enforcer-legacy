@@ -22,7 +22,7 @@ public class DatabaseTest extends TestCase {
         super.setUp();
         String content = IOUtils.slurp(new File("testdata", "testdata.json"));
         json = new JSONArray(content);
-        db = new Database("test.db");
+        db = new Database("test.db", "org.apache.derby.jdbc.EmbeddedDriver");
     }
 
     @Override

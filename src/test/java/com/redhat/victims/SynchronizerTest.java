@@ -19,7 +19,7 @@ public class SynchronizerTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        db = new Database("test.db");
+        db = new Database("test.db", "org.apache.derby.jdbc.EmbeddedDriver");
     }
 
     @Override

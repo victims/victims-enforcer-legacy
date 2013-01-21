@@ -38,6 +38,7 @@ public class Database {
 
     private Connection connection;
     private final String database;
+    private final String url; 
     private Log log;
 
     /**
@@ -46,8 +47,8 @@ public class Database {
      *
      * @param db The location to store the database files.
      */
-    public Database(String db) {
-        this(db, new SystemStreamLog());
+    public Database(String db, String driver, String conn) {
+        this(db, driver, conn, new SystemStreamLog());
     }
 
     /**
@@ -58,13 +59,14 @@ public class Database {
      * @param db
      * @param l
      */
-    public Database(String db, Log l) {
+    public Database(String db, String driver, String conn, Log l) {
 
         database = db;
         log = l;
         connection = null;
+        url = conn;
         try {
-            final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
+            //final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
             Class.forName(driver).newInstance();
 
         } catch (Exception e) {
@@ -423,8 +425,8 @@ public class Database {
      */
     private void connect() throws SQLException {
 
-        String protocol = String.format("jdbc:derby:%s;create=true", database);
-        connection = DriverManager.getConnection(protocol);
+        //String protocol = String.format("jdbc:derby:%s;create=true", database);
+        connection = DriverManager.getConnection(Settings.);
 
         PreparedStatement createTable = null;
         try {

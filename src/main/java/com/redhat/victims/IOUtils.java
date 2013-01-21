@@ -285,24 +285,4 @@ public final class IOUtils {
         }
     }
     
-    /**
-     * Essentially ["A", "B", "C"].join(":") -> "A:B:C"
-     * 
-     * @param bread The thing to join together 
-     * @param jam  The glue sticking things together. 
-     * @return 
-     */
-    public static String sandwich(String []bread, String jam){
-        
-        int elems = bread.length;
-        StringBuilder sb = new StringBuilder();
-      
-        for (String str : bread){
-            sb.append(str);
-            if (elems-- > 1)
-                sb.append(jam);
-        }
-        
-        return sb.toString();
-    }
-}
+ }

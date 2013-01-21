@@ -18,6 +18,8 @@
  */
 package com.redhat.victims.archive;
 
+import com.redhat.victims.archive.java.FingerprintClassfile;
+import com.redhat.victims.archive.java.Jar;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.zip.ZipFile;
@@ -27,9 +29,9 @@ import junit.framework.TestCase;
  *
  * @author gm
  */
-public class MetadataVisitorTest extends TestCase {
+public class FingerprintClassfileTest extends TestCase {
     
-    public MetadataVisitorTest(String testName) {
+    public FingerprintClassfileTest(String testName) {
         super(testName);
     }
     
@@ -44,29 +46,29 @@ public class MetadataVisitorTest extends TestCase {
     }
 
     /**
-     * Test of visit method, of class MetadataVisitor.
+     * Test of visit method, of class FingerprintVisitor.
      */
     public void testVisit() {
-        
+       
         try { 
             
             ZipFile jar = new ZipFile(new File("testdata", "junit-3.8.1.jar"));
             Jar j = new Jar(jar);
             
-            MetadataVisitor instance = new MetadataVisitor();
+            FingerprintClassfile instance = new FingerprintClassfile("SHA-512");
             j.accept(instance);
           
-            FileWriter fout = new FileWriter(new File("tmp", "junit-3.8.1.jar.meta"));
-            fout.write(instance.getInformation().toString());
+            FileWriter fout = new FileWriter(new File("tmp", "junit-3.8.1.hash"));
+            fout.write(instance.result().toString());
             fout.close();
             
-            // FIXME: Actual testing for expected values
-            fail("this test is not finished yet");
-            
+            // FIXME - Do actual diff 
+            fail("This test is not finished");
+        
         } catch(Exception e){
             fail(e.toString());
         }
     }
 
-    
+
 }

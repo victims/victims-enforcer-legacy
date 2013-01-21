@@ -34,7 +34,7 @@ public class FingerprintCommandTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        db = new Database("test.db");
+        db = new Database("test.db", "src/main/java/com/redhat/victims/archive/java/pretty.json");
         JSONObject json = new JSONObject();
         json.put("cves", "CVE-TEST-ONLY");
         json.put("hash", "8e6f9fa5eb3ba93a8b1b5a39e01a81c142b33078264dbd0a2030d60dd26735407249a12e66f5cdcab8056e93a5687124fe66e741c233b4c7a06cc8e49f82e98b");

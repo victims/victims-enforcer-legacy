@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.redhat.victims.archive;
+package com.redhat.victims.archive.java;
 
+import com.redhat.victims.archive.ArchiveVisitor;
 import com.redhat.victims.hash.ClassData;
 import com.redhat.victims.hash.Hash;
 import java.io.DataInputStream;
@@ -17,12 +18,12 @@ import org.json.JSONObject;
  *
  * @author gm
  */
-public class FingerprintVisitor implements JarVisitor {
+public class FingerprintClassfile implements ArchiveVisitor {
 
     private JSONObject fingerprint;
     private String algorithm;
     
-    public FingerprintVisitor(String hashFunction){
+    public FingerprintClassfile(String hashFunction){
         fingerprint = new JSONObject();
         algorithm = hashFunction;
     }
@@ -58,7 +59,7 @@ public class FingerprintVisitor implements JarVisitor {
         }
     }
 
-    public JSONObject getInformation() {
+    public JSONObject result() {
         return fingerprint;
     }
 }
