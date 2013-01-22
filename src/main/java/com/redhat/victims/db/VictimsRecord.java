@@ -17,7 +17,7 @@
  *
  */
 
-package com.redhat.victims.db.json;
+package com.redhat.victims.db;
 
 import com.google.gson.Gson;
 import java.util.Date;
@@ -49,7 +49,6 @@ public class VictimsRecord  {
         meta = new HashMap<String, Map<String, String> >();
     }
     
-    
     public String toJSON(){
         Gson gson = new Gson();
         return gson.toJson(this);
@@ -63,5 +62,4 @@ public class VictimsRecord  {
     public static VictimsRecord fromJSON(JSONObject o){
         return fromJSON(o.toString());
     }
-    
 }

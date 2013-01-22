@@ -75,7 +75,7 @@ public class Synchronizer {
      * @param q  The statement (update / insert) to perform on the database.
      * @param url The url to make the request to.
      * @return The number of entries that were updated.
-     * @throws Exception Thrown if a bad response is receieved from the server.
+     * @throws Exception Thrown if a bad response is received from the server.
      */
     private int sync(Database db, Statements q, final String url) throws Exception {
 

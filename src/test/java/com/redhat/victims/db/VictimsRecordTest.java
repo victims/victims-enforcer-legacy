@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.redhat.victims.db.json;
+package com.redhat.victims.db;
 
 import java.util.Map;
 import junit.framework.TestCase;

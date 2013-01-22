@@ -16,13 +16,20 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims.db.json;
+package com.redhat.victims.db;
+
+import java.util.Map;
 
 /**
+ *
  * @author gm
  */
-  
-public enum Status {
-    SUBMITTED,
-    RELEASED
-};
+public class HashRecord {
+    
+    public HashRecord(){
+        files = new java.util.HashMap<String, String>();
+    }
+    
+    public String combined;
+    public Map<String, String> files;
+}

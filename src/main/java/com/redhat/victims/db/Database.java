@@ -20,8 +20,14 @@ package com.redhat.victims.db;
 
 import com.redhat.victims.IOUtils;
 import com.redhat.victims.Resources;
+import com.redhat.victims.Settings;
 import com.redhat.victims.VictimsException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.json.JSONException;
@@ -116,131 +122,235 @@ public class Database {
     }
 
     /**
-     * Returns a operation that will insert a JSON object into the database when
-     * executed.
-     *
-     * @return An insert statement.
      */
-    private Statement insert() {
-
-        return (new Statement() {
-
-            public JSONObject execute(JSONObject json) throws JSONException, SQLException {
-
-                JSONObject result = createResultJSON(false, null);
-
-                final String insertSQL =
-                        "INSERT INTO VICTIMS"
-                        + "(cves, db_version, hash, vendor, name, version) "
-                        + "VALUES(?, ?, ?, ?, ?, ?)";
-
-                PreparedStatement insert = null;
-                try {
-
-                    insert = connection.prepareStatement(insertSQL);
-                    insert.setString(1, json.getString("cves"));
-                    insert.setInt(2, json.getInt("db_version"));
-                    insert.setString(3, json.getString("hash"));
-                    insert.setString(4, json.getString("vendor"));
-                    insert.setString(5, json.getString("name"));
-                    insert.setString(6, json.getString("version"));
-
-                    result = createResultJSON(insert.executeUpdate() > 0, result);
-                    return result;
-
-                } catch (SQLIntegrityConstraintViolationException e) {
-
-                    // Don't barf on duplicate key just return false
-                    if (e.getSQLState().equals("23505")) {
-                        log.warn(e.getLocalizedMessage());
-                    } else {
-                        throw e;
-                    }
-
-                    return result;
-
-                } finally {
-
-                    if (insert != null) {
-                        insert.close();
-                    }
-                }
-
+    public void insert(VictimsRecord r) throws SQLException {
+        
+        int changed = 0;
+        PreparedStatement stmt = null;
+        try {
+           
+            /* victims table entries -----------------------------------------*/
+            stmt = connection.prepareStatement(Query.INSERT_VICTIMS);
+            stmt.setInt   (1, r.id);
+            stmt.setString(2, Arrays.toString(r.cves));
+            stmt.setString(3, r.vendor);
+            stmt.setString(4, r.name);
+            stmt.setDate  (5, new java.sql.Date(r.date.getTime()));
+            stmt.setString(6, r.version);
+            stmt.setString(7, r.submitter);
+            stmt.setString(8, r.status.name());
+            
+            changed = stmt.executeUpdate();
+            // TODO Remove
+            System.out.println(String.format("Updated %d records in the VICTIMS table.", changed));
+            stmt.close();
+            
+            /* fingerprint table entries -------------------------------------*/
+            for (Map.Entry<String, HashRecord> hashes : r.hashes.entrySet()){
+                
+                String algorithm = hashes.getKey();
+                HashRecord record = hashes.getValue();
+                 
+                changed = 0;
+                for (Map.Entry<String, String> hash : record.files.entrySet()){
+                    
+                    stmt = connection.prepareStatement(Query.INSERT_FINGERPRINT); 
+                    stmt.setInt(1, r.id);
+                    stmt.setString(2,algorithm);
+                    stmt.setString(3, record.combined);
+                    stmt.setString(4, hash.getKey());   // filename
+                    stmt.setString(5, hash.getValue()); //  hash  
+                    changed+= stmt.executeUpdate();
+                    stmt.close();
+                }      
+                // TODO Remove
+                System.out.println(String.format("Updated %d records in the FINGERPRINT table.", changed));
             }
-        });
+            
+            /* metadata table entries ---------------------------------------*/
+            for (Map.Entry<String, Map<String, String> > meta : r.meta.entrySet()){
+                
+                String source = meta.getKey();
+                Map<String, String> data = meta.getValue(); 
+                
+                changed = 0;
+                for (String property : data.keySet()){
+                    
+                    stmt = connection.prepareStatement(Query.INSERT_METADATA);
+                    stmt.setString(1, source);
+                    stmt.setInt(2, r.id);
+                    stmt.setString(3, property); 
+                    stmt.setString(4, data.get(property));
+                    
+                    changed += stmt.executeUpdate();
+                    stmt.close();            
+                }
+                
+                System.out.println(String.format("Updated %d record in the METADATA table", changed));
+                
+            }          
+            
+        } finally { 
+            if (stmt != null){
+                stmt.close();
+            }
+        }
     }
 
     /**
-     * Returns an operation that will list all entries within the database when
-     * executed.
-     *
-     * @return A list statement.
      */
-    private Statement list() {
+    public List<VictimsRecord> list() throws SQLException {
+        
+        List<VictimsRecord> records = new ArrayList<VictimsRecord>();
+        PreparedStatement all = null;
+        try {
+            
+            all = connection.prepareStatement("SELECT ID FROM VICTIMS");
+            ResultSet rs = all.executeQuery();
 
-        return (new Statement() {
-
-            public JSONObject execute(JSONObject o) throws JSONException, SQLException {
-
-                JSONObject result = createResultJSON(false, null);
-                PreparedStatement listing = null;
-                try {
-
-                    listing = connection.prepareStatement("SELECT * FROM VICTIMS ORDER BY created");
-                    ResultSet rs = listing.executeQuery();
-
-
-                    while (rs.next()) {
-                        result.append("collection", marshal(getSchema(), rs));
-                    }
-                    if (result.has("collection")) {
-                        result = createResultJSON(true, result);
-                    }
-
-                    return result;
-
-                } finally {
-                    if (listing != null) {
-                        listing.close();
-                    }
-                }
-
-
+            rs.first();
+            do {
+                records.add(getVictimsRecord(rs.getInt("id")));        
+            } 
+            while (rs.next());
+             
+        } finally {
+            
+            if (all != null){
+                all.close();
             }
-        });
+        }
+        
+        return records;
     }
-
+        
     /**
-     * Returns an operation that will remove any objects from the database that
-     * match the supplied primary key (SHA-512).
-     *
-     * @return The remove statement.
+     * 
      */
-    private Statement remove() {
-
-        return (new Statement() {
-
-            public JSONObject execute(JSONObject json) throws JSONException, SQLException {
-
-                JSONObject result;
-                final String deleteSQL = "DELETE FROM VICTIMS WHERE hash = ?";
-                PreparedStatement delete = null;
-
+    public VictimsRecord getVictimsRecord(int victimsId) throws SQLException {
+        
+        VictimsRecord record = new VictimsRecord();
+        PreparedStatement stmt = null;
+        try {
+            
+            stmt = connection.prepareStatement("SELECT * FROM victims WHERE id = ?");
+            stmt.setInt(1, victimsId);
+            
+            /* victims data -------------------------------------------------*/
+            ResultSet rs = stmt.executeQuery();
+            record.id           = rs.getInt("id");
+            record.cves         = rs.getString("cves").split(",");
+            record.date         = rs.getDate("created");
+            record.format       = rs.getString("format");
+            record.name         = rs.getString("name");
+            record.status       = Status.valueOf(rs.getString("status"));
+            record.submitter    = rs.getString("submitter");
+            record.vendor       = rs.getString("vendor");
+            record.version      = rs.getString("version");
+            
+            stmt.close();
+            
+            /* fingerprint data ---------------------------------------------*/
+            stmt = connection.prepareStatement("SELECT algorithm FROM fingerprints WHERE victims_id = ?");
+            stmt.setInt(1, victimsId);
+            rs = stmt.executeQuery();
+            rs.first();
+            
+            do {
+                
+                String algorithm = rs.getString("algorithm");
+                HashRecord hashRecord = null;
+                PreparedStatement hashes = null;
                 try {
-                    delete = connection.prepareStatement(deleteSQL);
-                    delete.setString(1, json.getString("hash"));
-                    result = createResultJSON(delete.executeUpdate() > 0, null);
-                    return result;
-
+                    hashes = connection.prepareStatement("SELECT * FROM "
+                            + "fingerprints WHERE victims_id = ? "
+                            + "and algorithm = ? ");
+                    hashes.setInt(1, victimsId);
+                    hashes.setString(2, algorithm);
+                    
+                    ResultSet files = hashes.executeQuery();
+                    
+                    files.first();
+                    hashRecord = new HashRecord();
+                    hashRecord.combined = files.getString("combined");
+                    
+                    do {
+                        
+                        String filename = files.getString("filename");
+                        String hash = files.getString("hash");
+                        hashRecord.files.put(filename, hash);
+                                           
+                    } 
+                    while(files.next());
+                    
                 } finally {
-                    if (delete != null) {
-                        delete.close();
+                    
+                    if (hashes != null){
+                        hashes.close();
                     }
                 }
+                
+                if (hashRecord != null){
+                    record.hashes.put(algorithm, hashRecord);
+                }
+                
+            } 
+            while (rs.next());
+            
+            stmt.close();
+            
+            /* metadata -----------------------------------------------------*/
+            stmt = connection.prepareStatement("SELECT source FROM fingerprints WHERE victims_id = ?");
+            stmt.setInt(1, victimsId);
+            rs = stmt.executeQuery();
+            rs.first();
+                     
+            do {
+                
+                String source = rs.getString("source");
+                
+                PreparedStatement metadata = connection.prepareStatement("SELECT * FROM metadata WHERE victims_id = ? and source = ?");
+                metadata.setInt(1, victimsId);
+                metadata.setString(2, source);
+                ResultSet properties = metadata.executeQuery();
+                rs.first();
+                
+                Map<String, String> data = new HashMap<String, String>();
+                do {
+                    
+                    String property = properties.getString("property");
+                    String value = properties.getString("value");
+                    data.put(property, value);
+                    
+                    
+                }
+                while (properties.next());
+                
+                record.meta.put(source, data);
+               
+                
+            } 
+            while(rs.next());
+            
+                
+        } finally {
+            
+            if (stmt != null)
+                stmt.close();
+        }
 
+        return record;
+    }
+    
+    /**
+     * 
+     * @param victimsId 
+     */
+    public void remove(int victimsId) {
+        
+        
 
-            }
-        });
+    
     }
 
     /**
@@ -413,6 +523,7 @@ public class Database {
         for (String k : keys) {
             obj.put(k, rs.getString(k));
         }
+        
 
         return obj;
     }
@@ -426,31 +537,29 @@ public class Database {
     private void connect() throws SQLException {
 
         //String protocol = String.format("jdbc:derby:%s;create=true", database);
-        connection = DriverManager.getConnection(Settings.);
+        connection = DriverManager.getConnection(url);
 
-        PreparedStatement createTable = null;
+        PreparedStatement stmt = null;
         try {
 
             DatabaseMetaData meta = connection.getMetaData();
-            ResultSet rs = meta.getTables(null, null, "VICTIMS", null);
+            ResultSet rs = meta.getTables(null, null, "victims", null);
             if (!rs.next()) {
 
-                createTable = connection.prepareStatement(
-                        "CREATE TABLE VICTIMS ( "
-                        + "cves VARCHAR(255) NOT NULL,"
-                        + "db_version INTEGER NOT NULL, "
-                        + "hash VARCHAR(1024) NOT NULL, "
-                        + "vendor VARCHAR(255) NOT NULL, "
-                        + "name VARCHAR(255) NOT NULL, "
-                        + "created timestamp not null default current timestamp,"
-                        + "version VARCHAR(255) NOT NULL, PRIMARY KEY(hash))");
-
-                createTable.execute();
+                stmt = connection.prepareStatement(Query.CREATE_VICTIMS_TABLE);
+                stmt.execute();
+                
+                stmt = connection.prepareStatement(Query.CREATE_FINGERPRINT_TABLE);
+                stmt.execute();
+                
+                stmt = connection.prepareStatement(Query.CREATE_METADATA_TABLE);
+                stmt.execute();
+           
             }
 
         } finally {
-            if (createTable != null) {
-                createTable.close();
+            if (stmt != null) {
+                stmt.close();
             }
         }
     }
@@ -491,18 +600,18 @@ public class Database {
 
         switch (id) {
 
-            case INSERT:
-                return insert();
-            case REMOVE:
-                return remove();
-            case LIST:
-                return list();
-            case CHECK_HASH:
-                return containsHash();
-            case CHECK_JAR:
-                return containsJAR();
-            case VERSION:
-                return version();
+//            case INSERT:
+//                return insert();
+//            case REMOVE:
+//                return remove();
+//            case LIST:
+//                return list();
+//            case CHECK_HASH:
+//                return containsHash();
+//            case CHECK_JAR:
+//                return containsJAR();
+//            case VERSION:
+//                return version();
             default:
                 throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_SQL_STATEMENT));
         }
