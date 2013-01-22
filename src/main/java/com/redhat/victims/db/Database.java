@@ -327,8 +327,6 @@ public class Database {
                 while (properties.next());
                 
                 record.meta.put(source, data);
-               
-                
             } 
             while(rs.next());
             
