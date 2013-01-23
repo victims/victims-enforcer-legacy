@@ -1,12 +1,11 @@
 
 package com.redhat.victims;
 
-import com.redhat.victims.db.Statements;
 import com.redhat.victims.db.Database;
+import com.redhat.victims.db.VictimsRecord;
+import java.util.List;
 import junit.framework.TestCase;
 import org.apache.maven.plugin.logging.Log;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 
 public class SynchronizerTest extends TestCase {
@@ -14,50 +13,54 @@ public class SynchronizerTest extends TestCase {
     public SynchronizerTest(String testName) {
         super(testName);
     }
+    
     Database db = null;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        db = new Database("test.db", "org.apache.derby.jdbc.EmbeddedDriver");
+        
+        db = new Database("org.apache.derby.jdbc.ClientDriver", 
+                "jdbc:derby://localhost:1527/victims-test");
+
+        db.dropTables();
+        db.createTables();
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
          if (db != null) {
+            
             try {
-
-                JSONObject results = db.executeStatement(Statements.LIST, null);
-                if (results.has("collection")) {
-                    JSONArray json = results.getJSONArray("collection");
-                    for (int i = 0; i < json.length(); i++) {
-                        JSONObject next = json.getJSONObject(i);
-                        db.executeStatement(Statements.REMOVE, next);
-                    }
-                }
+                db.dropTables();
+                
             } catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
+            } finally {
+                db.disconnect();
+            };
         }
     }
 
     public void testSynchronizeDatabase() {
-
-        System.out.println("synchronizeDatabase");
-
+        
         try {
+            
+            System.out.println("synchronizeDatabase");
+            System.out.println("VICTIMS: " + db.tableExists("VICTIMS"));
+            System.out.println("FINGERPRINTS: " + db.tableExists("FINGERPRINTS"));
+            System.out.println("METADATA: " + db.tableExists("METADATA"));
+        
             Log log = new org.apache.maven.plugin.logging.SystemStreamLog();
-            Synchronizer client = new Synchronizer("https://victims-websec.rhcloud.com/service/v1", log);
+            Synchronizer client = new Synchronizer("http://localhost:5000/service/v2", log);
             client.synchronizeDatabase(db);
-            JSONObject result = db.executeStatement(Statements.LIST, null);
-
-            assertTrue(result.has("collection"));
-            assertTrue(result.getJSONArray("collection").length() > 0);
-
-
+           
+            assert(db.list().size() > 0);
+          
         } catch (Exception e) {
+            e.printStackTrace();
             fail("Test failed: " + e.getMessage());
         }
     }
+
 }

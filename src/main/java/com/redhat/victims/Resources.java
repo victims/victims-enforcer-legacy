@@ -69,7 +69,7 @@ public class Resources extends ListResourceBundle  {
     /**
      * Format of message for displaying the current database version.
      */
-    public static final String INFO_DATABASE_VERSION        = "INFO_DATABASE_VERSION";
+    public static final String INFO_DATABASE_LAST_UPDATE     = "INFO_DATABASE_LAST_UPDATE";
 
     /**
      * Format of message shown when database version has been updated.
@@ -168,7 +168,7 @@ public class Resources extends ListResourceBundle  {
             { INFO_METADATA_BODY,           " * Artifact %s matches the database entry %s (%s) "                },
 
 
-            { INFO_DATABASE_VERSION,        "Victims database version is %d.0"                                  },
+            { INFO_DATABASE_LAST_UPDATE,    "Victims database last entry was created on %s."                    },
             { INFO_ITEMS_ADDED,             "Added %d new records to the database."                             },
             { INFO_ITEMS_REMOVED,           "Removed %d obsolete records from the database."                    },
             { INFO_NEW_DATABASE_VERSION,    "Victims database version is now %d.0"                              },

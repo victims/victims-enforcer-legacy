@@ -5,8 +5,8 @@
 package com.redhat.victims.commands;
 
 import com.redhat.victims.Settings;
+import com.redhat.victims.Synchronizer;
 import com.redhat.victims.db.Database;
-import com.redhat.victims.db.Statements;
 import java.io.File;
 import junit.framework.TestCase;
 import org.apache.maven.artifact.Artifact;
@@ -25,6 +25,7 @@ import org.json.JSONObject;
  */
 public class MetadataCommandTest extends TestCase {
 
+    
     Database db;
     public MetadataCommandTest(String testName) {
         super(testName);
@@ -34,15 +35,12 @@ public class MetadataCommandTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        db = new Database("test.db", "org.apache.derby.jdbc.EmbeddedDriver");
-        JSONObject json = new JSONObject();
-        json.put("cves", "CVE-TEST-ONLY");
-        json.put("hash", "8e6f9fa5eb3ba93a8b1b5a39e01a81c142b33078264dbd0a2030d60dd26735407249a12e66f5cdcab8056e93a5687124fe66e741c233b4c7a06cc8e49f82e98b");
-        json.put("db_version", 0);
-        json.put("version", "3.8.1");
-        json.put("vendor", "Test Vendor");
-        json.put("name", "junit");
-        db.executeStatement(Statements.INSERT, json);
+           
+        db = new Database("org.apache.derby.jdbc.ClientDriver", 
+                "jdbc:derby://localhost:1527/victims-test");
+        
+        db.dropTables();
+        db.createTables();
     }
 
     @Override
@@ -51,15 +49,8 @@ public class MetadataCommandTest extends TestCase {
         if (db != null) {
             try {
 
-                JSONObject results = db.executeStatement(Statements.LIST, null);
-                if (results.has("collection")) {
-                    JSONArray json = results.getJSONArray("collection");
-                    for (int i = 0; i < json.length(); i++) {
-                        JSONObject next = json.getJSONObject(i);
-                        db.executeStatement(Statements.REMOVE, next);
-                    }
-                }
-
+               db.dropTables();
+              
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
@@ -69,8 +60,10 @@ public class MetadataCommandTest extends TestCase {
     public void testExecute() throws Exception {
 
         try {
-            System.out.println("execute");
-
+            
+            Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
+            dbsync.synchronizeDatabase(db);
+            
             ArtifactHandler handler = new DefaultArtifactHandler();
             Artifact testArtifact = new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null, handler);
             testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
@@ -111,4 +104,5 @@ public class MetadataCommandTest extends TestCase {
         assertEquals(expResult, result);
 
     }
+    
 }

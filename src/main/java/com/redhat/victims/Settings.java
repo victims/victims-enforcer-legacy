@@ -56,7 +56,7 @@ public final class Settings {
     public static final String DATABASE_PATH    = "path";
     public static final String UPDATE_DATABASE  = "updates";
     public static final String DATABASE_DRIVER  = "driver";
-    public static final String DATABASE_CONNECT_URL = "jdbc:derby:%s;create=true";
+    public static final String DATABASE_CONNECT_URL = "database-url";
     /**
      * Reasonably sensible defaults
      */

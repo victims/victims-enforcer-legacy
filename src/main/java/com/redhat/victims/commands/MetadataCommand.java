@@ -18,14 +18,15 @@
  */
 package com.redhat.victims.commands;
 
-import com.redhat.victims.IOUtils;
-import com.redhat.victims.Resources;
 import com.redhat.victims.Settings;
-import com.redhat.victims.VictimsException;
-import com.redhat.victims.db.Database;
-import com.redhat.victims.db.Statements;
+import com.redhat.victims.archive.java.Jar;
+import com.redhat.victims.archive.java.JarMetadata;
+import com.redhat.victims.db.VictimsRecord;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.jar.Attributes;
+import java.util.zip.ZipFile;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,50 +38,62 @@ import org.json.JSONObject;
  */
 public final class MetadataCommand implements Command {
 
+    
     public void execute(ExecutionContext ctx) throws EnforcerRuleException {
 
-        try {
-
-            JSONObject q = new JSONObject();
-            q.put("version", ctx.getArtifact().getVersion());
-            q.put("name", ctx.getArtifact().getArtifactId());
-
-            Database db = ctx.getDatabase();
-            JSONObject rs = db.executeStatement(Statements.CHECK_JAR, q);
-
-            if (rs.getBoolean("result") && rs.has("collection")) {
-
-                String mode = ctx.getSettings().get(Settings.METADATA);
-                String info = IOUtils.fmt(Resources.INFO_METADATA_HEADING);
-                IOUtils.report(ctx.getLog(), mode, info);
-
-                JSONArray jars = rs.getJSONArray("collection");
-                for (int i = 0; i < jars.length(); i++) {
-
-                    JSONObject o = jars.getJSONObject(i);
-                    String artifact = ctx.getArtifact().getArtifactId();
-                    String name = o.getString("name");
-                    String ver = o.getString("version");
-                    String match = IOUtils.fmt(Resources.INFO_METADATA_BODY, artifact, name, ver);
-                    IOUtils.report(ctx.getLog(), mode, match);
-
-                }
-
-                if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
-
-                    StringBuilder err = new StringBuilder();
-                    err.append(IOUtils.box(IOUtils.fmt(Resources.FATAL_METADATA_HEADING)));
-                    err.append(IOUtils.wrap(80, IOUtils.fmt(Resources.FATAL_METADATA_BODY, ctx.getArtifact().getId())));
-                    throw new EnforcerRuleException(err.toString());
-
-                }
-            }
-
-        } catch (JSONException e) {
-            ctx.getLog().error(e.getMessage());
-        } catch (VictimsException e) {
-            ctx.getLog().error(e.getMessage());
-        }
+         Jar jarfile;
+         JSONObject result;
+         JarMetadata visitor;
+         String source; 
+         Iterator iter;
+         VictimsRecord record; 
+         
+         try {
+             
+             jarfile = new Jar(new ZipFile(ctx.getArtifact().getFile()));
+             visitor = new JarMetadata();
+             jarfile.accept(visitor);
+             result = visitor.result();
+          
+             iter = result.keys();
+             while (iter.hasNext()){
+                 
+                 source = iter.next().toString();
+                 
+                 if (source.endsWith("pom.properties")){
+                     
+                     JSONObject properties = result.getJSONObject(source);
+                     record = ctx.getDatabase().findByProperties(
+                             properties.getString("groupId"), 
+                             properties.getString("artifactId"),
+                             properties.getString("version"));
+                     
+                     // TODO Fix this
+                     if (record != null)
+                         System.out.println("Parital match: " + record.toJSON());
+                     
+                 }
+                 
+                 if (source.endsWith("MANIFEST.MF")){
+                     
+                     JSONObject manifest = result.getJSONObject(source);
+                     record = ctx.getDatabase().findByImplementation(
+                             manifest.getString(Attributes.Name.IMPLEMENTATION_VENDOR.toString()),
+                             manifest.getString(Attributes.Name.IMPLEMENTATION_TITLE.toString()),
+                             manifest.getString(Attributes.Name.IMPLEMENTATION_VERSION.toString()));
+                     
+                 
+                     if (record != null)
+                         System.out.println("Partial match: " + record.toJSON());
+                 }
+                 
+             }
+             
+         } catch (JSONException e){
+             ctx.getLog().error(e);
+         } catch (IOException e){
+             ctx.getLog().error(e);
+         }
     }
 
     public String getDefaultExecutionMode() {

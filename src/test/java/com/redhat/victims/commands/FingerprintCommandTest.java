@@ -5,8 +5,8 @@
 package com.redhat.victims.commands;
 
 import com.redhat.victims.Settings;
+import com.redhat.victims.Synchronizer;
 import com.redhat.victims.db.Database;
-import com.redhat.victims.db.Statements;
 import java.io.File;
 import junit.framework.TestCase;
 import org.apache.maven.artifact.Artifact;
@@ -16,8 +16,6 @@ import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  *
@@ -34,15 +32,13 @@ public class FingerprintCommandTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        db = new Database("test.db", "src/main/java/com/redhat/victims/archive/java/pretty.json");
-        JSONObject json = new JSONObject();
-        json.put("cves", "CVE-TEST-ONLY");
-        json.put("hash", "8e6f9fa5eb3ba93a8b1b5a39e01a81c142b33078264dbd0a2030d60dd26735407249a12e66f5cdcab8056e93a5687124fe66e741c233b4c7a06cc8e49f82e98b");
-        json.put("db_version", 0);
-        json.put("version", "3.8.1");
-        json.put("vendor", "Test Vendor");
-        json.put("name", "junit");
-        db.executeStatement(Statements.INSERT, json);
+        
+        db = new Database("org.apache.derby.jdbc.ClientDriver", 
+                "jdbc:derby://localhost:1527/victims-test");
+        
+        db.dropTables();
+        db.createTables();
+       
     }
 
     @Override
@@ -51,14 +47,8 @@ public class FingerprintCommandTest extends TestCase {
         if (db != null) {
             try {
 
-                JSONObject results = db.executeStatement(Statements.LIST, null);
-                if (results.has("collection")) {
-                    JSONArray json = results.getJSONArray("collection");
-                    for (int i = 0; i < json.length(); i++) {
-                        JSONObject next = json.getJSONObject(i);
-                        db.executeStatement(Statements.REMOVE, next);
-                    }
-                }
+               db.dropTables();
+              
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
@@ -66,46 +56,49 @@ public class FingerprintCommandTest extends TestCase {
     }
 
     public void testExecute() throws Exception {
+        
         try {
+            
+            Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
+            dbsync.synchronizeDatabase(db);
 
-        ArtifactHandler handler = new DefaultArtifactHandler();
-        Artifact testArtifact = new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null, handler);
-        testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
+            ArtifactHandler handler = new DefaultArtifactHandler();
+            Artifact testArtifact = new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null, handler);
+            testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
 
-        Log log = new SystemStreamLog();
-        Settings config = new Settings();
-        config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
-        config.set(Settings.DATABASE_PATH, ".victims");
-        config.set(Settings.METADATA, Settings.MODE_WARNING);
-        config.set(Settings.URL, "http://www.dummy.com/service/v1");
-        config.set(Settings.UPDATE_DATABASE, "auto");
-        config.validate();
+            Log log = new SystemStreamLog();
+            Settings config = new Settings();
+            config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
+            config.set(Settings.DATABASE_PATH, ".victims");
+            config.set(Settings.METADATA, Settings.MODE_WARNING);
+            config.set(Settings.URL, "http://www.dummy.com/service/v1");
+            config.set(Settings.UPDATE_DATABASE, "auto");
+            config.validate();
 
 
-        ExecutionContext ctx = new ExecutionContext();
-        ctx.setArtifact(testArtifact);
-        ctx.setDatabase(db);
-        ctx.setLog(log);
-        ctx.setSettings(config);
+            ExecutionContext ctx = new ExecutionContext();
+            ctx.setArtifact(testArtifact);
+            ctx.setDatabase(db);
+            ctx.setLog(log);
+            ctx.setSettings(config);
 
-        FingerprintCommand cmd = new FingerprintCommand();
-        config.set(Settings.FINGERPRINT, Settings.MODE_DISABLED);
-        ctx.setSettings(config);
-        cmd.execute(ctx);
+            FingerprintCommand cmd = new FingerprintCommand();
+            config.set(Settings.FINGERPRINT, Settings.MODE_DISABLED);
+            ctx.setSettings(config);
+            cmd.execute(ctx);
 
-        config.set(Settings.FINGERPRINT, Settings.MODE_WARNING);
-        ctx.setSettings(config);
-        cmd.execute(ctx);
+            config.set(Settings.FINGERPRINT, Settings.MODE_WARNING);
+            ctx.setSettings(config);
+            cmd.execute(ctx);
 
-        config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
-        ctx.setSettings(config);
-        cmd.execute(ctx);
+            config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
+            ctx.setSettings(config);
+            cmd.execute(ctx);
 
-        cmd.execute(ctx);
 
 
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
             assertTrue(e instanceof EnforcerRuleException);
         }
 
@@ -118,4 +111,5 @@ public class FingerprintCommandTest extends TestCase {
         String result = instance.getDefaultExecutionMode();
         assertEquals(expResult, result);
     }
+    
 }

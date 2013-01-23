@@ -19,7 +19,12 @@
 package com.redhat.victims;
 
 import com.redhat.victims.db.Database;
-import com.redhat.victims.db.Statements;
+import com.redhat.victims.db.VictimsRecord;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -38,6 +43,7 @@ public class Synchronizer {
 
     private String baseURL;
     private Log log;
+    private DateFormat fmt;
 
     /**
      * Creates a new synchronizer instance that will attempt to
@@ -57,14 +63,18 @@ public class Synchronizer {
     public Synchronizer(String url, Log l) {
         baseURL = url;
         log = l;
+        fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    private String getUpdateURL(final int version) {
-        return String.format("%s/update/%d", baseURL, version);
+    private String getUpdateURL(final Date lastUpdated) {
+        String dateString = fmt.format(lastUpdated);
+        return String.format("%s/update/%s/", baseURL, dateString);
     }
 
-    private String getObseleteURL(final int version) {
-        return String.format("%s/remove/%d", baseURL, version);
+    private String getObseleteURL(final Date lastUpdated) {
+        String dateString = fmt.format(lastUpdated);
+        return String.format("%s/remove/%s/", baseURL, dateString);
     }
 
     /**
@@ -77,7 +87,7 @@ public class Synchronizer {
      * @return The number of entries that were updated.
      * @throws Exception Thrown if a bad response is received from the server.
      */
-    private int sync(Database db, Statements q, final String url) throws Exception {
+    private int sync(Database db, final String url) throws Exception {
 
         int modified = 0;
         HttpMethod get = new GetMethod(url);
@@ -86,12 +96,16 @@ public class Synchronizer {
         String response = get.getResponseBodyAsString();
 
         if (response.length() > "[]".length()) {
+            
             JSONArray entries = new JSONArray(get.getResponseBodyAsString());
             modified = entries.length();
+            
             for (int i = 0; i < entries.length(); i++) {
-
-                JSONObject entry = entries.getJSONObject(i).getJSONObject("fields");
-                db.executeStatement(q, entry);
+                 
+                JSONObject obj = entries.getJSONObject(i).getJSONObject("fields");
+                String dateString = obj.getString("date").split("\\.")[0];
+                obj.put("date", dateString);
+                db.insert(VictimsRecord.fromJSON(obj));
             }
         }
 
@@ -108,27 +122,33 @@ public class Synchronizer {
     public void synchronizeDatabase(Database db) throws VictimsException {
 
         try {
-
+            
             int changes;
-            JSONObject result = db.executeStatement(Statements.VERSION, null);
-            int version = result.getInt("db_version");
-
-            log.info(IOUtils.fmt(Resources.INFO_DATABASE_VERSION, version));
+           
+            Date newestEntry = db.latest();
+            if (newestEntry == null)
+                newestEntry = new Date(0); // All entries.
+                                                
+            log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
             log.info(IOUtils.fmt(Resources.INFO_PERFORMING_SYNC));
 
-            changes = sync(db, Statements.INSERT, getUpdateURL(version));
+            changes = sync(db, getUpdateURL(newestEntry));
             log.info(String.format(IOUtils.fmt(Resources.INFO_ITEMS_ADDED, changes)));
 
-            changes = sync(db, Statements.REMOVE, getObseleteURL(version));
+            changes = sync(db, getObseleteURL(newestEntry));
             log.info(String.format(IOUtils.fmt(Resources.INFO_ITEMS_REMOVED, changes)));
-
-            result = db.executeStatement(Statements.VERSION, null);
-            version = result.getInt("db_version");
-            log.info(IOUtils.fmt(Resources.INFO_NEW_DATABASE_VERSION, version));
-
-        } catch (Exception e) {
+            
+            newestEntry = db.latest();
+            log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
+            
+        
+        } catch(Exception e){
+            e.printStackTrace();
             throw new VictimsException(IOUtils.fmt(Resources.ERR_SYNCHRONIZATION_FAILURE), e);
 
+//        } finally {
+//            try { db.disconnect(); } catch(SQLException e){};
         }
+     
     }
 }

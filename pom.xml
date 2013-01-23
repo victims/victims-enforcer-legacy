@@ -82,6 +82,11 @@
       <version>2.3-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbyclient</artifactId>
+      <version>10.9.1.0</version>
+    </dependency>
   </dependencies>
   <scm>
     <connection>scm:git:git@github.com:gcmurphy/enforce-victims-rule.git</connection>

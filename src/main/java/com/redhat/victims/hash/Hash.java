@@ -46,7 +46,7 @@ public final class Hash {
         byte[] buf = new byte[1024];
         byte[] digest;
 
-        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        MessageDigest md = MessageDigest.getInstance(algorithm);
 
         while ((nbytes = is.read(buf)) > 0) {
             md.update(buf, 0, nbytes);
@@ -56,6 +56,7 @@ public final class Hash {
 
         return new String(Hex.encodeHex(digest));
     }
-
+    
+    
   
 }

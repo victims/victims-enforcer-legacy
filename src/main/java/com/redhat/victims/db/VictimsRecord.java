@@ -20,6 +20,7 @@
 package com.redhat.victims.db;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
  * @author gm
  */
 public class VictimsRecord  {
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     
     public Status       status;
     public int          id;
@@ -50,12 +52,12 @@ public class VictimsRecord  {
     }
     
     public String toJSON(){
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
         return gson.toJson(this);
     }
     
     public static VictimsRecord fromJSON(String str){
-        Gson gson = new Gson(); 
+        Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
         return gson.fromJson(str, VictimsRecord.class);
     }
     

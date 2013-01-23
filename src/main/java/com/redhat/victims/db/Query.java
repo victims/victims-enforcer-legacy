@@ -26,7 +26,7 @@ public class Query {
     
      public static final String CREATE_VICTIMS_TABLE = 
             "CREATE TABLE victims ("
-                + "id          INTEGER         NOT NULL,"
+                + "id          INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
                 + "cves        VARCHAR(255)    NOT NULL,"
                 + "vendor      VARCHAR(255)    NOT NULL,"
                 + "name        VARCHAR(255)    NOT NULL,"
@@ -34,8 +34,7 @@ public class Query {
                 + "version     VARCHAR(255)    NOT NULL,"
                 + "submitter   VARCHAR(255)    NOT NULL,"
                 + "format      VARCHAR(255)    NOT NULL,"
-                + "status      VARCHAR(255)    NOT NULL,"
-                + "PRIMARY KEY(id))";
+                + "status      VARCHAR(255)    NOT NULL)";
 
     public static final String CREATE_FINGERPRINT_TABLE = 
             "CREATE TABLE fingerprints ("
@@ -49,18 +48,17 @@ public class Query {
             
     public static final String CREATE_METADATA_TABLE = 
             "CREATE TABLE metadata ("
-                + "id           INTEGER         NOT NULL AUTO_INCREMENT, "
+                + "id           INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
                 + "source       VARCHAR(255)    NOT NULL, "
                 + "victims_id   INTEGER         NOT NULL, "
                 + "property     VARCHAR(255)    NOT NULL, "
                 + "value        VARCHAR(255)    NOT NULL, "
-                + "PRIMARY KEY(id), "
                 + "FOREIGN KEY(victims_id) REFERENCES VICTIMS(ID))";
     
     public static final String INSERT_VICTIMS = 
-            "INSERT INTO victims(id, cves, vendor, name, "
+            "INSERT INTO victims(cves, vendor, name, "
                 + "created, version, submitter, format, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     
     public static final String INSERT_FINGERPRINT = 
             "INSERT INTO fingerprints (victims_id, algorithm,"
@@ -77,14 +75,38 @@ public class Query {
             "DELETE FROM fingerprints WHERE victims_id = ?";
     
     public static final String DELETE_METADATA = 
-            "DELETE FROM metadata WHERE victims_id = ?";
-            
+            "DELETE FROM metadata WHERE victims_id = ?";         
 
     public static final String FIND_BY_PROPERTY = 
             "SELECT vicitms_id FROM metadata WHERE property = ? AND value LIKE ?";
     
-
-    public static final String FIND_BY_HASH = 
-            "SELECT victims_id FROM fingerprints WHERE hash = ?";
+    public static final String FIND_BY_CLASSNAME = 
+            "SELECT victims_id FROM fingerprint WHERE filename = ?";
+    
+    public static final String FIND_BY_CLASS_HASH = 
+            "SELECT victims_id FROM fingerprint WHERE hash = ?";
+    
+    public static final String FIND_BY_JAR_HASH = 
+            "SELECT DISTINCT victims_id FROM fingerprint WHERE combined = ?";
+    
+    public static final String GET_METADATA_SOURCES =
+            "SELECT source FROM metadata WHERE victims_id = ?";
+    
+    public static final String GET_METADATA_PROPERTIES = 
+            "SELECT * FROM metadata WHERE victims_id = ? and source = ?";
+    
+    public static final String GET_FINGERPRINT_FILES = 
+            "SELECT * FROM fingerprints WHERE victims_id = ? and algorithm = ? ";
           
+    public static final String GET_FINGERPRINT_ALGORITHMS = 
+            "SELECT algorithm FROM fingerprints WHERE victims_id = ?";
+    
+    public static final String GET_ALL_VICTIMS_IDS = 
+            "SELECT id FROM victims";
+
+    public static final String GET_VICTIM_BY_ID = 
+            "SELECT * FROM victims WHERE id = ?";
+    
+    public static final String GET_LATEST = 
+            "SELECT MAX(created) FROM VICTIMS";
 }

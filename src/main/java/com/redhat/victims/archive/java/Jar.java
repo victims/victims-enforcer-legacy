@@ -44,11 +44,11 @@ public class Jar implements Archive {
     public final void accept(ArchiveVisitor visitor)  {
    
         try {
-        Enumeration<? extends ZipEntry> enumerable;
-        for (enumerable = jarfile.entries(); enumerable.hasMoreElements();){
-            ZipEntry entry = enumerable.nextElement();
-            visitor.visit(entry.getName(), jarfile.getInputStream(entry));
-        }
+            Enumeration<? extends ZipEntry> enumerable;
+            for (enumerable = jarfile.entries(); enumerable.hasMoreElements();){
+                ZipEntry entry = enumerable.nextElement();
+                visitor.visit(entry.getName(), jarfile.getInputStream(entry));
+            }
         } catch (IOException e){
             /* TODO: Logging */ 
         }
