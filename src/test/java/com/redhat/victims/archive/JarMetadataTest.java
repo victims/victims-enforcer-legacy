@@ -22,6 +22,8 @@ import com.redhat.victims.archive.java.JarMetadata;
 import com.redhat.victims.archive.java.Jar;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
+import java.util.jar.Attributes;
 import java.util.zip.ZipFile;
 import junit.framework.TestCase;
 
@@ -49,7 +51,17 @@ public class JarMetadataTest extends TestCase {
      * Test of visit method, of class MetadataVisitor.
      */
     public void testVisit() {
+         String[] attribs = {
+            Attributes.Name.MANIFEST_VERSION.toString(),
+            Attributes.Name.IMPLEMENTATION_TITLE.toString(),
+            Attributes.Name.IMPLEMENTATION_URL.toString(),
+            Attributes.Name.IMPLEMENTATION_VENDOR.toString(), 
+            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(), 
+            Attributes.Name.IMPLEMENTATION_VERSION.toString(),
+            Attributes.Name.MAIN_CLASS.toString()         
+        };
         
+        System.out.println(Arrays.toString(attribs));
         try { 
             
             ZipFile jar = new ZipFile(new File("testdata", "junit-3.8.1.jar"));
@@ -58,10 +70,6 @@ public class JarMetadataTest extends TestCase {
             JarMetadata instance = new JarMetadata();
             j.accept(instance);
           
-            FileWriter fout = new FileWriter(new File("tmp", "junit-3.8.1.jar.meta"));
-            fout.write(instance.result().toString());
-            fout.close();
-            
             // FIXME: Actual testing for expected values
             //fail("this test is not finished yet");
             

@@ -23,6 +23,7 @@ import com.redhat.victims.archive.java.Jar;
 import com.redhat.victims.archive.java.JarMetadata;
 import com.redhat.victims.db.VictimsRecord;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.jar.Attributes;
 import java.util.zip.ZipFile;
@@ -55,14 +56,21 @@ public final class MetadataCommand implements Command {
              jarfile.accept(visitor);
              result = visitor.result();
           
+             System.out.println("JSON Result ::=" + result);
+
              iter = result.keys();
              while (iter.hasNext()){
                  
                  source = iter.next().toString();
+                 System.out.println("source: " + source);
                  
                  if (source.endsWith("pom.properties")){
                      
                      JSONObject properties = result.getJSONObject(source);
+                     System.out.println("processing pom.xml: " + properties.toString() );
+
+                     
+                     
                      record = ctx.getDatabase().findByProperties(
                              properties.getString("groupId"), 
                              properties.getString("artifactId"),
@@ -71,20 +79,25 @@ public final class MetadataCommand implements Command {
                      // TODO Fix this
                      if (record != null)
                          System.out.println("Parital match: " + record.toJSON());
+                     else
+                         System.out.println("No match for (pom): " + properties.toString());
                      
                  }
                  
                  if (source.endsWith("MANIFEST.MF")){
                      
                      JSONObject manifest = result.getJSONObject(source);
+                     System.out.println("processing MANIFEST.MF: " + manifest.toString());
+                     
                      record = ctx.getDatabase().findByImplementation(
                              manifest.getString(Attributes.Name.IMPLEMENTATION_VENDOR.toString()),
                              manifest.getString(Attributes.Name.IMPLEMENTATION_TITLE.toString()),
                              manifest.getString(Attributes.Name.IMPLEMENTATION_VERSION.toString()));
                      
-                 
                      if (record != null)
                          System.out.println("Partial match: " + record.toJSON());
+                     else
+                         System.out.println("No match for (manifest): " + manifest.toString());
                  }
                  
              }
@@ -92,6 +105,8 @@ public final class MetadataCommand implements Command {
          } catch (JSONException e){
              ctx.getLog().error(e);
          } catch (IOException e){
+             ctx.getLog().error(e);
+         } catch (SQLException e){
              ctx.getLog().error(e);
          }
     }

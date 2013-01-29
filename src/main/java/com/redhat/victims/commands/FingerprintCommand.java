@@ -26,8 +26,9 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.zip.ZipException;
+import java.util.List;
 import java.util.zip.ZipFile;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -57,6 +58,9 @@ public final class FingerprintCommand implements Command {
             MessageDigest md;
             FingerprintClassfile visitor;
             Jar jarfile;
+            String[] hashes;
+            VictimsRecord[] matches;
+            double tolerance;
             
             jarfile = new Jar(new ZipFile(ctx.getArtifact().getFile()));
             for (String algorithm : algorithms) {
@@ -66,30 +70,80 @@ public final class FingerprintCommand implements Command {
                 jarfile.accept(visitor);
                 result = visitor.result();
                 
-                // Create a master hash 
+                // Create a master hash  
+                // FIXME: This is pointless really. The master hash should 
+                // just be replaced with a hash of the entired JAR content.
                 iter = result.keys();
                 md = MessageDigest.getInstance(algorithm);
                 
+                List<String> jarContent = new ArrayList<String>();
                 while (iter.hasNext()){
                     
                     // Update the master hash
                     String hash = result.getString(iter.next().toString());
                     md.update(hash.getBytes());
-                
-                    // Search for the class fingerprint whilst at it. 
-                    record = ctx.getDatabase().findByClassHash(hash);
-                    
-                    // TODO
-                    if (record != null)
-                        System.out.println("Partial match: " + record.toJSON());
+                    jarContent.add(hash);
+            
                 }
                 
+                // Check the combined hash 
                 combined = new String(Hex.encodeHex(md.digest()));
                 record = ctx.getDatabase().findByJarHash(combined);
+                if (record != null){
+                    
+                    System.out.println("Found JAR hash: ");
+                    // Display purposes only
+                    JSONObject obj = new JSONObject(record.toJSON());
+                    obj.remove("hashes");
+                    obj.put("hash", combined);
+                    
+                    // Notify of the error
+                    String fmt = IOUtils.fmt(Resources.INFO_FINGERPRINT_HEADING);
+                    String info = IOUtils.prettyPrint(fmt, obj);
+                    String mode = ctx.getSettings().get(Settings.FINGERPRINT);
+                    IOUtils.report(ctx.getLog(), mode, info);
+                    
+                    if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)){
+                        System.out.println("This is a fatal error!");
+                    }
+                } else {
+                    System.out.println("No matches found...");
+                }
                 
-                // TODO
-                if (record != null)
-                    System.out.println("Full match: " + record.toJSON());
+                tolerance = Double.parseDouble(ctx.getSettings().get("tolerance"));      
+                hashes = jarContent.toArray(new String[jarContent.size()]);
+                matches = ctx.getDatabase().findByClassSet(hashes, tolerance);
+                
+                if (matches.length > 0) {
+                    
+                    System.out.println("Found some matches");
+                           
+                    for (VictimsRecord r : matches){
+                        
+                        // Display purposes only
+                        JSONObject rjson = new JSONObject(r.toJSON());
+                        rjson.remove("hashes");
+                        for (String h : r.hashes.keySet()){
+                            if (jarContent.contains(h)){
+                                rjson.put(h, r.hashes.get(h));
+                            }
+                        }
+                        
+                        System.out.println("RJSON: " + rjson.toString());
+                        
+                        // Notify of the error
+                        String fmt = IOUtils.fmt(Resources.INFO_CLASSMATCH_HEADING, String.valueOf(tolerance * 100));
+                        String info = IOUtils.prettyPrint(fmt, rjson);
+                        String mode = ctx.getSettings().get(Settings.FINGERPRINT);
+                        IOUtils.report(ctx.getLog(), mode, info);
+                    }
+                    if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)){
+                        System.out.println("This is a fatal error!");
+                    }
+                } else {
+                    System.out.println("No matches were found..");
+                }
+     
             }
         
         } catch (NoSuchAlgorithmException e) {

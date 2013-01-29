@@ -31,6 +31,10 @@ public class Resources extends ListResourceBundle  {
      */
     public static final String INFO_FINGERPRINT_HEADING     = "INFO_FINGERPRINT_HEADING";
 
+    /** The format for the message shown if a percentage of a 
+     * JAR file makes up a known vulnerable artifact
+     */
+    public static final String INFO_CLASSMATCH_HEADING      = "INFO_CLASSMATCH_HEADING";
     /**
      * The message shown if a vulnerable artifact is
      * detected by fingerprint and rule is operating in FATAL mode.
@@ -156,6 +160,7 @@ public class Resources extends ListResourceBundle  {
                                             + "the reported vulnerabilities. The affected artifact ID is '%s'." },
 
             { INFO_FINGERPRINT_HEADING,     "Vulnerable artifact matched a database record"                     },
+            { INFO_CLASSMATCH_HEADING,      "Vulnerable artifact matches %s%% of classes within a database record" },
 
 
             { FATAL_METADATA_HEADING,       "Detected potentially vulnerable artifact"                          },

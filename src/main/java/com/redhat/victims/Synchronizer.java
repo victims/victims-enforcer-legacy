@@ -20,7 +20,9 @@ package com.redhat.victims;
 
 import com.redhat.victims.db.Database;
 import com.redhat.victims.db.VictimsRecord;
-import java.sql.SQLException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -92,12 +94,27 @@ public class Synchronizer {
         int modified = 0;
         HttpMethod get = new GetMethod(url);
         HttpClient client = new HttpClient();
-        client.executeMethod(get);
-        String response = get.getResponseBodyAsString();
+        client.executeMethod(get);   
+        
+        File tmp = new File(".victims.json");
+        tmp.delete();
+        tmp.createNewFile();
+        
+        byte[] buf = new byte[1024];
+        FileOutputStream out = new FileOutputStream(tmp);
+        InputStream in = get.getResponseBodyAsStream();
+        while(in.read(buf) > 0){
+            out.write(buf);
+        } 
+        
+        in.close();
+        out.close();
+        
+        String response = IOUtils.slurp(tmp);
 
         if (response.length() > "[]".length()) {
             
-            JSONArray entries = new JSONArray(get.getResponseBodyAsString());
+            JSONArray entries = new JSONArray(response);
             modified = entries.length();
             
             for (int i = 0; i < entries.length(); i++) {

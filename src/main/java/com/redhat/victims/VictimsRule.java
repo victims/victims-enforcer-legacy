@@ -44,11 +44,13 @@ public class VictimsRule implements EnforcerRule {
     /*
      * Configuration options available in pom.xml
      */
-    private String url = Settings.defaults.get(Settings.URL);
-    private String metadata = Settings.defaults.get(Settings.METADATA);
-    private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
-    private String driver = Settings.defaults.get(Settings.DATABASE_DRIVER);
-    private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
+    private String url          = Settings.defaults.get(Settings.URL);
+    private String metadata     = Settings.defaults.get(Settings.METADATA);
+    private String fingerprint  = Settings.defaults.get(Settings.FINGERPRINT);
+    private String dbdriver     = Settings.defaults.get(Settings.DATABASE_DRIVER);
+    private String dburl        = Settings.defaults.get(Settings.DATABASE_URL);
+    private String updates      = Settings.defaults.get(Settings.UPDATE_DATABASE);
+    private String tolerance    = Settings.defaults.get(Settings.TOLERANCE);
 
     /*
      * Checks performed as a part of this rule
@@ -76,15 +78,14 @@ public class VictimsRule implements EnforcerRule {
             setup.set(Settings.METADATA, metadata);
             setup.set(Settings.FINGERPRINT, fingerprint);
             setup.set(Settings.UPDATE_DATABASE, updates);
-            setup.set(Settings.DATABASE_DRIVER, driver);
+            setup.set(Settings.DATABASE_DRIVER, dbdriver);
+            setup.set(Settings.DATABASE_URL, dburl);
+            setup.set(Settings.TOLERANCE, tolerance);
             setup.validate();
             setup.show(log);
 
             // Create database instance
-            String path = setup.get(Settings.DATABASE_PATH);
-            String driver = setup.get(Settings.DATABASE_DRIVER);
-            String url = setup.get(Settings.DATABASE_CONNECT_URL);
-            Database db = new Database(driver, url);
+            Database db = new Database(dbdriver, dburl);
 
             // Synchronize it with the server
             if (setup.updatesEnabled()) {

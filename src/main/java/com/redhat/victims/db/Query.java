@@ -24,6 +24,10 @@ package com.redhat.victims.db;
  */
 public class Query {
     
+    /* 
+     * TODO: Move database table creation logic to external source. The 
+     * autoincrement element of these tables is not likely to be portable.
+     */
      public static final String CREATE_VICTIMS_TABLE = 
             "CREATE TABLE victims ("
                 + "id          INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
@@ -77,17 +81,36 @@ public class Query {
     public static final String DELETE_METADATA = 
             "DELETE FROM metadata WHERE victims_id = ?";         
 
+    
+    public static final String FIND_BY_POM_PROPERTIES = 
+            "select victims_id from metadata "
+            + "where source like '%pom.properties' and ("
+            + " property = 'groupId'    and value = ?       or "
+            + " property = 'artifactId' and value = ?       or "
+            + " property = 'version'    and value like ?"
+            + ")"
+            + "group by victims_id having count(victims_id) = 3";
+    
+    public static final String FIND_BY_IMPLEMENTATION_INFO = 
+            "select victims_id from metadata "
+            + "where source like '%MANIFEST.MF' and ("
+            + " property = 'Implementation-Title'   and value = ?       or "
+            + " property = 'Implementation-Vendor'  and value = ?       or "
+            + " property = 'Implementation-Version' and value like ?"
+            + ")"
+            + "group by victims_id having count(victims_id) = 3";
+    
     public static final String FIND_BY_PROPERTY = 
             "SELECT vicitms_id FROM metadata WHERE property = ? AND value LIKE ?";
     
     public static final String FIND_BY_CLASSNAME = 
-            "SELECT victims_id FROM fingerprint WHERE filename = ?";
+            "SELECT victims_id FROM fingerprints WHERE filename = ?";
     
     public static final String FIND_BY_CLASS_HASH = 
-            "SELECT victims_id FROM fingerprint WHERE hash = ?";
+            "SELECT victims_id FROM fingerprints WHERE hash = ?";
     
     public static final String FIND_BY_JAR_HASH = 
-            "SELECT DISTINCT victims_id FROM fingerprint WHERE combined = ?";
+            "SELECT DISTINCT victims_id FROM fingerprints WHERE combined = ?";
     
     public static final String GET_METADATA_SOURCES =
             "SELECT source FROM metadata WHERE victims_id = ?";

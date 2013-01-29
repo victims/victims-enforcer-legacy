@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import org.json.JSONException;
@@ -97,6 +98,8 @@ public class JarMetadata implements ArchiveVisitor {
             Attributes.Name.IMPLEMENTATION_VERSION.toString(),
             Attributes.Name.MAIN_CLASS.toString()         
         };
+        
+        System.out.println(Arrays.toString(attribs));
         
         for (String attrib : attribs){
             properties.put(attrib, mf.getEntries().get(attrib));

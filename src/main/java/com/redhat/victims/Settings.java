@@ -55,8 +55,11 @@ public final class Settings {
     public static final String FINGERPRINT      = "fingerprint";
     public static final String DATABASE_PATH    = "path";
     public static final String UPDATE_DATABASE  = "updates";
-    public static final String DATABASE_DRIVER  = "driver";
-    public static final String DATABASE_CONNECT_URL = "database-url";
+    public static final String DATABASE_DRIVER  = "dbdriver";
+    public static final String DATABASE_URL     = "dburl";
+    public static final String TOLERANCE        = "tolerance";
+    
+    
     /**
      * Reasonably sensible defaults
      */
@@ -68,8 +71,9 @@ public final class Settings {
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
         mappings.put(DATABASE_PATH, ".victims");
-        mappings.put(DATABASE_CONNECT_URL, "jdbc:derby:.victims;create=true");
+        mappings.put(DATABASE_URL, "jdbc:derby:.victims;create=true");
         mappings.put(DATABASE_DRIVER, "org.apache.derby.jdbc.EmbeddedDriver");
+        mappings.put(TOLERANCE, "0.75");
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
         defaults = Collections.unmodifiableMap(mappings);
     }
@@ -91,59 +95,59 @@ public final class Settings {
     private Validator[] required = {
         (new Validator() {
 
-    public void validate() throws VictimsException {
+            public void validate() throws VictimsException {
 
-        try {
+                try {
 
-            String entry = settings.get(URL);
-            if (entry == null || entry.length() <= 0) {
-                throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, URL));
+                    String entry = settings.get(URL);
+                    if (entry == null || entry.length() <= 0) {
+                        throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, URL));
+                    }
+
+                    URI url;
+                    try {
+                        url = new HttpURL(entry);
+
+                    } catch (URIException e) {
+                        url = new HttpsURL(entry);
+                    }
+
+                    if (!url.getPath().endsWith("service/v1")) {
+                        System.err.println("Doesn't end in service/v1");
+                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
+                    }
+
+                } catch (URIException e) {
+                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
+                }
             }
-
-            URI url;
-            try {
-                url = new HttpURL(entry);
-
-            } catch (URIException e) {
-                url = new HttpsURL(entry);
-            }
-
-            if (!url.getPath().endsWith("service/v1")) {
-                System.err.println("Doesn't end in service/v1");
-                throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
-            }
-
-        } catch (URIException e) {
-            throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
-        }
-    }
-}),
+        }),
         (new Validator() {
 
-    public void validate() throws VictimsException {
+            public void validate() throws VictimsException {
 
-        List<String> modes = new ArrayList<String>();
-        modes.add(MODE_FATAL);
-        modes.add(MODE_WARNING);
-        modes.add(MODE_DISABLED);
+                List<String> modes = new ArrayList<String>();
+                modes.add(MODE_FATAL);
+                modes.add(MODE_WARNING);
+                modes.add(MODE_DISABLED);
 
-        List<String> modeSettings = new ArrayList<String>();
-        modeSettings.add(METADATA);
-        modeSettings.add(FINGERPRINT);
+                List<String> modeSettings = new ArrayList<String>();
+                modeSettings.add(METADATA);
+                modeSettings.add(FINGERPRINT);
 
-        for (String item : modeSettings) {
-            String value = settings.get(item);
-            if (value == null) {
-                throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, item));
+                for (String item : modeSettings) {
+                    String value = settings.get(item);
+                    if (value == null) {
+                        throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, item));
+                    }
+
+                    if (!modes.contains(value)) {
+                        String err = IOUtils.fmt(Resources.ERR_INVALID_MODE, value, item, modes.toString());
+                        throw new VictimsException(err);
+                    }
+                }
             }
-
-            if (!modes.contains(value)) {
-                String err = IOUtils.fmt(Resources.ERR_INVALID_MODE, value, item, modes.toString());
-                throw new VictimsException(err);
-            }
-        }
-    }
-})
+        })
     };
 
     /**

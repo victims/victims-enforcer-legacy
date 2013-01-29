@@ -1,6 +1,20 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2012 Red Hat Inc.
+ *
+ * This file is part of enforce-victims-rule for the Maven Enforcer Plugin.
+ * enforce-victims-rule is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * enforce-victims-rule is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 package com.redhat.victims.commands;
 
@@ -37,7 +51,6 @@ public class FingerprintCommandTest extends TestCase {
                 "jdbc:derby://localhost:1527/victims-test");
         
         db.dropTables();
-        db.createTables();
        
     }
 
@@ -59,6 +72,7 @@ public class FingerprintCommandTest extends TestCase {
         
         try {
             
+            db.createTables();
             Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
             dbsync.synchronizeDatabase(db);
 
@@ -73,6 +87,7 @@ public class FingerprintCommandTest extends TestCase {
             config.set(Settings.METADATA, Settings.MODE_WARNING);
             config.set(Settings.URL, "http://www.dummy.com/service/v1");
             config.set(Settings.UPDATE_DATABASE, "auto");
+            config.set(Settings.TOLERANCE, "0.75");
             config.validate();
 
 
