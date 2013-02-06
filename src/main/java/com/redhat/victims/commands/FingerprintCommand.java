@@ -43,83 +43,79 @@ import org.json.JSONObject;
  */
 public final class FingerprintCommand implements Command {
 
-    public void execute(ExecutionContext ctx) throws EnforcerRuleException {
-        
+    /**
+     * Scan project dependencies and ensure no artifacts have the same
+     * fingerprint as any entry in the database.
+     *
+     * FIXME: Cyclonic complexity of this is getting pretty high #refator
+     *
+     * @param ctx The execution context to run this command under.
+     * @throws EnforcerRuleException
+     */
+    public void execute(final ExecutionContext ctx) throws EnforcerRuleException {
+
         try {
-            
-            // FIXME - Retreive algorithms from the database or allow user 
-            // to set these values;
-            String algorithms[] = { "SHA-1", "SHA-512" };
-            
-            VictimsRecord record;
-            String combined;
-            Iterator iter;
-            JSONObject result;
-            MessageDigest md;
-            FingerprintClassfile visitor;
-            Jar jarfile;
-            String[] hashes;
-            VictimsRecord[] matches;
-            double tolerance;
-            
-            jarfile = new Jar(new ZipFile(ctx.getArtifact().getFile()));
+
+            // FIXME - Retreive algorithms from the database or allow user
+            // to set these values; NB. The database entries are in Python
+            // format (sha1, sha512.. etc) so will need to normalize these.
+            final String algorithms[] = { "SHA-1", "SHA-512" };
+            final String artifactId = ctx.getArtifact().getArtifactId();
+            final String filename = ctx.getArtifact().getFile().getCanonicalPath();
+            final String execMode = ctx.getSettings().get(Settings.FINGERPRINT);
+            double tolerance = Double.parseDouble(ctx.getSettings().get("tolerance"));
+            final String combinedFormat = IOUtils.fmt(Resources.INFO_FINGERPRINT_HEADING);
+            final String classfileFormat = IOUtils.fmt(Resources.INFO_CLASSMATCH_HEADING,
+                                String.valueOf(tolerance * 100));
+
+            Jar jarfile = new Jar(new ZipFile(ctx.getArtifact().getFile()));
             for (String algorithm : algorithms) {
-                
-                // Visit each class file in the JAR. 
-                visitor = new FingerprintClassfile(algorithm);
+
+                // Visit each class file in the JAR.
+                FingerprintClassfile visitor = new FingerprintClassfile(algorithm);
                 jarfile.accept(visitor);
-                result = visitor.result();
-                
-                // Create a master hash  
-                // FIXME: This is pointless really. The master hash should 
+                JSONObject result = visitor.results().getJSONObject(0);
+
+                // Create a master hash
+                // FIXME: This is pointless really. The master hash should
                 // just be replaced with a hash of the entired JAR content.
-                iter = result.keys();
-                md = MessageDigest.getInstance(algorithm);
-                
+                Iterator iter = result.keys();
+                MessageDigest md = MessageDigest.getInstance(algorithm);
                 List<String> jarContent = new ArrayList<String>();
                 while (iter.hasNext()){
-                    
+
                     // Update the master hash
                     String hash = result.getString(iter.next().toString());
                     md.update(hash.getBytes());
                     jarContent.add(hash);
-            
                 }
-                
-                // Check the combined hash 
-                combined = new String(Hex.encodeHex(md.digest()));
-                record = ctx.getDatabase().findByJarHash(combined);
-                if (record != null){
-                    
-                    System.out.println("Found JAR hash: ");
+
+                // Check the combined hash
+                final String combined = new String(Hex.encodeHex(md.digest()));
+                final VictimsRecord record = ctx.getDatabase().findByJarHash(combined);
+                if (record != null) {
+
                     // Display purposes only
                     JSONObject obj = new JSONObject(record.toJSON());
                     obj.remove("hashes");
                     obj.put("hash", combined);
-                    
+
                     // Notify of the error
-                    String fmt = IOUtils.fmt(Resources.INFO_FINGERPRINT_HEADING);
-                    String info = IOUtils.prettyPrint(fmt, obj);
-                    String mode = ctx.getSettings().get(Settings.FINGERPRINT);
-                    IOUtils.report(ctx.getLog(), mode, info);
-                    
+                    String info = IOUtils.prettyPrint(combinedFormat, obj);
+                    IOUtils.report(ctx.getLog(), execMode, info);
+
                     if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)){
-                        System.out.println("This is a fatal error!");
+                        fatalError(artifactId, filename);
                     }
-                } else {
-                    System.out.println("No matches found...");
                 }
-                
-                tolerance = Double.parseDouble(ctx.getSettings().get("tolerance"));      
-                hashes = jarContent.toArray(new String[jarContent.size()]);
-                matches = ctx.getDatabase().findByClassSet(hashes, tolerance);
-                
+
+                String[] hashes = jarContent.toArray(new String[jarContent.size()]);
+                VictimsRecord[] matches = ctx.getDatabase().findByClassSet(hashes, tolerance);
+
                 if (matches.length > 0) {
-                    
-                    System.out.println("Found some matches");
-                           
+
                     for (VictimsRecord r : matches){
-                        
+
                         // Display purposes only
                         JSONObject rjson = new JSONObject(r.toJSON());
                         rjson.remove("hashes");
@@ -128,24 +124,18 @@ public final class FingerprintCommand implements Command {
                                 rjson.put(h, r.hashes.get(h));
                             }
                         }
-                        
-                        System.out.println("RJSON: " + rjson.toString());
-                        
+
                         // Notify of the error
-                        String fmt = IOUtils.fmt(Resources.INFO_CLASSMATCH_HEADING, String.valueOf(tolerance * 100));
-                        String info = IOUtils.prettyPrint(fmt, rjson);
-                        String mode = ctx.getSettings().get(Settings.FINGERPRINT);
-                        IOUtils.report(ctx.getLog(), mode, info);
+                        String info = IOUtils.prettyPrint(classfileFormat, rjson);
+                        IOUtils.report(ctx.getLog(), execMode, info);
                     }
-                    if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)){
-                        System.out.println("This is a fatal error!");
+
+                    if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)) {
+                        fatalError(artifactId, filename);
                     }
-                } else {
-                    System.out.println("No matches were found..");
                 }
-     
             }
-        
+
         } catch (NoSuchAlgorithmException e) {
             ctx.getLog().error(e);
 
@@ -156,7 +146,18 @@ public final class FingerprintCommand implements Command {
             ctx.getLog().error(e);
         } catch (SQLException e){
             ctx.getLog().error(e);
-        }         
+        }
+    }
+
+
+    private void fatalError(final String artifactId, final String filename) throws EnforcerRuleException {
+
+        StringBuilder err = new StringBuilder();
+        err.append(IOUtils.box(IOUtils.fmt(Resources.FATAL_FINGERPRINT_HEADING)));
+        err.append(IOUtils.wrap(80, IOUtils.fmt(Resources.FATAL_FINGERPRINT_BODY, filename, artifactId)));
+
+        throw new EnforcerRuleException(err.toString());
+
     }
 
     public String getDefaultExecutionMode() {

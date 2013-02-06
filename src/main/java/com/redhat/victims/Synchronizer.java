@@ -94,31 +94,32 @@ public class Synchronizer {
         int modified = 0;
         HttpMethod get = new GetMethod(url);
         HttpClient client = new HttpClient();
-        client.executeMethod(get);   
-        
+        client.executeMethod(get);
+
         File tmp = new File(".victims.json");
         tmp.delete();
         tmp.createNewFile();
-        
+
         byte[] buf = new byte[1024];
         FileOutputStream out = new FileOutputStream(tmp);
         InputStream in = get.getResponseBodyAsStream();
         while(in.read(buf) > 0){
             out.write(buf);
-        } 
-        
+        }
+
         in.close();
         out.close();
-        
+
+        // Ouch..
         String response = IOUtils.slurp(tmp);
 
         if (response.length() > "[]".length()) {
-            
+
             JSONArray entries = new JSONArray(response);
             modified = entries.length();
-            
+
             for (int i = 0; i < entries.length(); i++) {
-                 
+
                 JSONObject obj = entries.getJSONObject(i).getJSONObject("fields");
                 String dateString = obj.getString("date").split("\\.")[0];
                 obj.put("date", dateString);
@@ -139,13 +140,13 @@ public class Synchronizer {
     public void synchronizeDatabase(Database db) throws VictimsException {
 
         try {
-            
+
             int changes;
-           
-            Date newestEntry = db.latest();
+
+            Date newestEntry = db.lastUpdated();
             if (newestEntry == null)
                 newestEntry = new Date(0); // All entries.
-                                                
+
             log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
             log.info(IOUtils.fmt(Resources.INFO_PERFORMING_SYNC));
 
@@ -154,11 +155,12 @@ public class Synchronizer {
 
             changes = sync(db, getObseleteURL(newestEntry));
             log.info(String.format(IOUtils.fmt(Resources.INFO_ITEMS_REMOVED, changes)));
-            
-            newestEntry = db.latest();
-            log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
-            
-        
+
+            newestEntry = db.lastUpdated();
+            if (newestEntry != null)
+                log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
+
+
         } catch(Exception e){
             e.printStackTrace();
             throw new VictimsException(IOUtils.fmt(Resources.ERR_SYNCHRONIZATION_FAILURE), e);
@@ -166,6 +168,6 @@ public class Synchronizer {
 //        } finally {
 //            try { db.disconnect(); } catch(SQLException e){};
         }
-     
+
     }
 }

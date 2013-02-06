@@ -59,6 +59,7 @@ public class MetadataCommandTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        
         super.tearDown();
         if (db != null) {
             try {

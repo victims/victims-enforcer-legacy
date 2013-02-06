@@ -19,10 +19,14 @@
 package com.redhat.victims;
 
 import com.redhat.victims.db.Database;
-import com.redhat.victims.db.VictimsRecord;
-import java.util.List;
+import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import junit.framework.TestCase;
-import org.apache.maven.plugin.logging.Log;
 
 
 public class SynchronizerTest extends TestCase {
@@ -30,53 +34,77 @@ public class SynchronizerTest extends TestCase {
     public SynchronizerTest(String testName) {
         super(testName);
     }
-    
+
+
+
+
+
+
+
     Database db = null;
+    HttpServer httpd = null;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        db = new Database("org.apache.derby.jdbc.ClientDriver", 
-                "jdbc:derby://localhost:1527/victims-test");
+
+
+        db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
+                Settings.defaults.get(Settings.DATABASE_URL));
+        //db = new Database("org.apache.derby.jdbc.ClientDriver",
+        //        "jdbc:derby://localhost:1527/victims-test");
 
         db.dropTables();
         db.createTables();
+
+        httpd = HttpServer.create(new InetSocketAddress(1337), 0);
+        httpd.start();
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
          if (db != null) {
-            
+
             try {
                 db.dropTables();
-                
+
             } catch (Exception e) {
             } finally {
                 db.disconnect();
+                httpd.stop(0);
             };
         }
     }
 
     public void testSynchronizeDatabase() {
-        
+
         try {
-            
-            System.out.println("synchronizeDatabase");
-            System.out.println("VICTIMS: " + db.tableExists("VICTIMS"));
-            System.out.println("FINGERPRINTS: " + db.tableExists("FINGERPRINTS"));
-            System.out.println("METADATA: " + db.tableExists("METADATA"));
-        
-            Log log = new org.apache.maven.plugin.logging.SystemStreamLog();
-            Synchronizer client = new Synchronizer("http://localhost:5000/service/v2", log);
+
+            // TODO: Actual data
+            HttpHandler handler = new HttpHandler(){
+                public void handle(HttpExchange ex) throws IOException {
+
+                    byte[] rsp = "[]".getBytes();
+                    ex.sendResponseHeaders(HttpURLConnection.HTTP_OK, rsp.length);
+                    ex.getResponseBody().write("[]".getBytes());
+                }
+            };
+
+
+            HttpContext ctx = httpd.createContext("/", handler);
+
+            Synchronizer client = new Synchronizer("http://localhost:1337/service/v2");
             client.synchronizeDatabase(db);
-           
+
+            httpd.removeContext(ctx);
+
             assert(db.list().size() > 0);
-          
+
         } catch (Exception e) {
             e.printStackTrace();
             fail("Test failed: " + e.getMessage());
+        } finally {
         }
     }
 

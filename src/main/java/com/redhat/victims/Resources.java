@@ -31,7 +31,7 @@ public class Resources extends ListResourceBundle  {
      */
     public static final String INFO_FINGERPRINT_HEADING     = "INFO_FINGERPRINT_HEADING";
 
-    /** The format for the message shown if a percentage of a 
+    /** The format for the message shown if a percentage of a
      * JAR file makes up a known vulnerable artifact
      */
     public static final String INFO_CLASSMATCH_HEADING      = "INFO_CLASSMATCH_HEADING";
@@ -56,6 +56,18 @@ public class Resources extends ListResourceBundle  {
      * to the entry within the database.
      */
     public static final String INFO_METADATA_BODY           = "INFO_METADATA_BODY";
+
+    /**
+     * Information shown that links meta data in an pom.properties file
+     * to an entry in the database
+     */
+    public static final String INFO_METADATA_BODY_POM       = "INFO_METADATA_BODY_POM";
+
+     /**
+     * Information shown that links meta data in an pom.properties file
+     * to an entry in the database
+     */
+    public static final String INFO_METADATA_BODY_MANIFEST       = "INFO_METADATA_BODY_MANIFEST";
 
     /**
      * Heading shown when a metadata match is found and rule
@@ -164,13 +176,18 @@ public class Resources extends ListResourceBundle  {
 
 
             { FATAL_METADATA_HEADING,       "Detected potentially vulnerable artifact"                          },
-            { FATAL_METADATA_BODY,          "The artifact '%s' has a name and version similar to one or more "
+            { FATAL_METADATA_BODY,          "The artifact '%s' has a metadata that is similar to other "
                                             + "entries in the Victims database. Run the enforcer plugin in "
                                             + "fingerprint mode for confirmation."                              },
 
             { INFO_METADATA_HEADING,        "Some dependencies in this project have been identified as"
                                             + " potentially being vulnerable."                                  },
-            { INFO_METADATA_BODY,           " * Artifact %s matches the database entry %s (%s) "                },
+            { INFO_METADATA_BODY_POM,       " * %s has a pom.properties file containing: artifactId %s, groupId %s,"
+                    + " and version %s. These match a record in the victims database." },
+
+            { INFO_METADATA_BODY_MANIFEST,  " * %s contains a MANIFEST.MF file with entries Implementation-Vendor %s, "
+                    + "Implementation-Title, and Implementation-Version %s. These match a record in the victims database.  " },
+
 
 
             { INFO_DATABASE_LAST_UPDATE,    "Victims database last entry was created on %s."                    },

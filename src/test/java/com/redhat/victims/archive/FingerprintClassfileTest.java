@@ -30,16 +30,16 @@ import junit.framework.TestCase;
  * @author gm
  */
 public class FingerprintClassfileTest extends TestCase {
-    
+
     public FingerprintClassfileTest(String testName) {
         super(testName);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -49,22 +49,22 @@ public class FingerprintClassfileTest extends TestCase {
      * Test of visit method, of class FingerprintVisitor.
      */
     public void testVisit() {
-       
-        try { 
-            
+
+        try {
+
             ZipFile jar = new ZipFile(new File("testdata", "junit-3.8.1.jar"));
             Jar j = new Jar(jar);
-            
+
             FingerprintClassfile instance = new FingerprintClassfile("SHA-512");
             j.accept(instance);
-          
+
             FileWriter fout = new FileWriter(new File("testdata", "junit-3.8.1.jar.fingerprint.SHA-512"));
-            fout.write(instance.result().toString());
+            fout.write(instance.results().toString());
             fout.close();
-            
-            // FIXME - Do actual diff 
+
+            // FIXME - Do actual diff
             //fail("This test is not finished");
-        
+
         } catch(Exception e){
             fail(e.toString());
         }

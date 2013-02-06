@@ -23,116 +23,120 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Visits files within a JAR file and extracts metadata from the file 
- * stream. 
- * 
+ * Visits files within a JAR file and extracts metadata from the file
+ * stream.
+ *
  * @author gm
  */
 public class JarMetadata implements ArchiveVisitor {
-    
-    private JSONObject metadata;
-    
+
+    private JSONArray metadata;
+
     public JarMetadata(){
-        metadata = new JSONObject();
+        metadata = new JSONArray();
     }
-   
+
     /**
-     * Extracts the POM properties from the supplied input stream. 
+     * Extracts the POM properties from the supplied input stream.
      * @param pom Stream to the pom.properties file.
-     * @return A JSON object that contains the extracted metadata. 
+     * @return A JSON object that contains the extracted metadata.
      * @throws IOException
-     * @throws JSONException 
+     * @throws JSONException
      */
-    private JSONObject getPomProperties(InputStream pom) 
+    private JSONObject getPomProperties(InputStream pom)
             throws IOException, JSONException {
-    
-        String line; 
+
+        String line;
         JSONObject properties;
         BufferedReader input;
-        
+
         properties = new JSONObject();
         input = new BufferedReader(new InputStreamReader(pom));
-        
+
         while ((line = input.readLine()) != null){
-            
+
             if (line.startsWith("#"))
                 continue;
-            
+
             String[] property = line.trim().split("=");
             if (property.length == 2)
                 properties.put(property[0], property[1]);
         }
-    
+
         return properties;
-        
+
     }
-    
+
     /**
-     * Attempts to parse a MANIFEST.MF file in the provided 
+     * Attempts to parse a MANIFEST.MF file in the provided
      * input stream.
-     * 
-     * @param manifest 
+     *
+     * @param manifest
      * @return A JSON object containing the extracted metadata.
      * @throws IOException
-     * @throws JSONException 
+     * @throws JSONException
      */
-    private JSONObject getManifest(InputStream manifest) 
+    private JSONObject getManifest(InputStream manifest)
         throws IOException, JSONException {
-        
-        
+
+
         JSONObject properties = new JSONObject();
         Manifest mf = new Manifest(manifest);
-        String[] attribs = {
+        final String[] attribs = {
             Attributes.Name.MANIFEST_VERSION.toString(),
             Attributes.Name.IMPLEMENTATION_TITLE.toString(),
             Attributes.Name.IMPLEMENTATION_URL.toString(),
-            Attributes.Name.IMPLEMENTATION_VENDOR.toString(), 
-            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(), 
+            Attributes.Name.IMPLEMENTATION_VENDOR.toString(),
+            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(),
             Attributes.Name.IMPLEMENTATION_VERSION.toString(),
-            Attributes.Name.MAIN_CLASS.toString()         
+            Attributes.Name.MAIN_CLASS.toString()
         };
-        
-        System.out.println(Arrays.toString(attribs));
-        
+
         for (String attrib : attribs){
-            properties.put(attrib, mf.getEntries().get(attrib));
+            Object o = mf.getEntries().get(attrib);
+            properties.put(attrib, (o == null) ? "" : o.toString() );
         }
-        
+
         return properties;
     }
 
     /**
-     * Visit jar file entry and collect metadata accordingly. 
-     * 
+     * Visit jar file entry and collect metadata accordingly.
+     *
      * @param name
-     * @param entry 
+     * @param entry
      */
     public void visit(String name, InputStream entry) {
-       
+
+        JSONObject obj;
         try {
             if (name.endsWith("pom.properties")) {
-                metadata.put(name, getPomProperties(entry));
+                obj = getPomProperties(entry);
+                obj.put("filename", name);
+                metadata.put(obj);
             } else if (name.endsWith("MANIFEST.MF")) {
-                metadata.put(name, getManifest(entry));
+                obj = getManifest(entry);
+                obj.put("filename", name);
+                metadata.put(obj);
             }
-        } 
-        catch (IOException e){} 
-        catch (JSONException e){}   
+        }
+        catch (IOException e){}
+        catch (JSONException e){}
     }
-    
+
     /**
-     * Retrieve the detected metadata that has been gathered by this visitor.  
-     * @return 
+     * Retrieve the detected metadata that has been gathered by this visitor.
+     * @return
      */
-    public JSONObject result(){
+    public JSONArray results(){
         return metadata;
     }
-    
+
 }

@@ -19,10 +19,10 @@
 package com.redhat.victims;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -53,8 +53,8 @@ public final class ArtifactLocator {
     public static InputStream resolveRemoteArtifact(final Artifact a) throws VictimsException {
 
         try {
-            HttpMethod get = new GetMethod(a.getDownloadUrl());
-            HttpClient client = new HttpClient();
+            final HttpMethod get = new GetMethod(a.getDownloadUrl());
+            final HttpClient client = new HttpClient();
             client.executeMethod(get);
             return get.getResponseBodyAsStream();
 

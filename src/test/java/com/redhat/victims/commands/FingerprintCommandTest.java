@@ -46,12 +46,12 @@ public class FingerprintCommandTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        db = new Database("org.apache.derby.jdbc.ClientDriver", 
+
+        db = new Database("org.apache.derby.jdbc.ClientDriver",
                 "jdbc:derby://localhost:1527/victims-test");
-        
+
         db.dropTables();
-       
+
     }
 
     @Override
@@ -61,7 +61,7 @@ public class FingerprintCommandTest extends TestCase {
             try {
 
                db.dropTables();
-              
+
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
@@ -69,9 +69,9 @@ public class FingerprintCommandTest extends TestCase {
     }
 
     public void testExecute() throws Exception {
-        
+
         try {
-            
+
             db.createTables();
             Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
             dbsync.synchronizeDatabase(db);
@@ -83,7 +83,6 @@ public class FingerprintCommandTest extends TestCase {
             Log log = new SystemStreamLog();
             Settings config = new Settings();
             config.set(Settings.FINGERPRINT, Settings.MODE_FATAL);
-            config.set(Settings.DATABASE_PATH, ".victims");
             config.set(Settings.METADATA, Settings.MODE_WARNING);
             config.set(Settings.URL, "http://www.dummy.com/service/v1");
             config.set(Settings.UPDATE_DATABASE, "auto");
@@ -126,5 +125,5 @@ public class FingerprintCommandTest extends TestCase {
         String result = instance.getDefaultExecutionMode();
         assertEquals(expResult, result);
     }
-    
+
 }

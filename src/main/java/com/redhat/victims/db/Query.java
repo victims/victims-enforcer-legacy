@@ -23,12 +23,12 @@ package com.redhat.victims.db;
  * @author gm
  */
 public class Query {
-    
-    /* 
-     * TODO: Move database table creation logic to external source. The 
+
+    /*
+     * TODO: Move database table creation logic to external source. The
      * autoincrement element of these tables is not likely to be portable.
      */
-     public static final String CREATE_VICTIMS_TABLE = 
+     public static final String CREATE_VICTIMS_TABLE =
             "CREATE TABLE victims ("
                 + "id          INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
                 + "cves        VARCHAR(255)    NOT NULL,"
@@ -40,17 +40,17 @@ public class Query {
                 + "format      VARCHAR(255)    NOT NULL,"
                 + "status      VARCHAR(255)    NOT NULL)";
 
-    public static final String CREATE_FINGERPRINT_TABLE = 
+    public static final String CREATE_FINGERPRINT_TABLE =
             "CREATE TABLE fingerprints ("
-                + "victims_id  INTEGER         NOT NULL," 
+                + "victims_id  INTEGER         NOT NULL,"
                 + "algorithm   VARCHAR(255)    NOT NULL,"
                 + "combined    VARCHAR(255)    NOT NULL,"
-                + "filename    VARCHAR(255)    NOT NULL," 
-                + "hash        VARCHAR(255)    NOT NULL," 
+                + "filename    VARCHAR(255)    NOT NULL,"
+                + "hash        VARCHAR(255)    NOT NULL,"
                 + "PRIMARY KEY(hash), "
                 + "FOREIGN KEY(victims_id) REFERENCES victims(id))";
-            
-    public static final String CREATE_METADATA_TABLE = 
+
+    public static final String CREATE_METADATA_TABLE =
             "CREATE TABLE metadata ("
                 + "id           INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
                 + "source       VARCHAR(255)    NOT NULL, "
@@ -58,78 +58,78 @@ public class Query {
                 + "property     VARCHAR(255)    NOT NULL, "
                 + "value        VARCHAR(255)    NOT NULL, "
                 + "FOREIGN KEY(victims_id) REFERENCES VICTIMS(ID))";
-    
-    public static final String INSERT_VICTIMS = 
+
+    public static final String INSERT_VICTIMS =
             "INSERT INTO victims(cves, vendor, name, "
                 + "created, version, submitter, format, status) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    public static final String INSERT_FINGERPRINT = 
+
+    public static final String INSERT_FINGERPRINT =
             "INSERT INTO fingerprints (victims_id, algorithm,"
                 + " combined, filename, hash) VALUES(?, ?, ?, ?, ?)";
-    
-    public static final String INSERT_METADATA = 
-            "INSERT INTO metadata (source, victims_id, "
-                + "property, value) VALUES(?, ?, ?, ?, ?)"; 
-    
-    public static final String DELETE_VICTIMS = 
-            "DELETE FROM victims WHERE id = ?";
-    
-    public static final String DELETE_FINGERPRINT = 
-            "DELETE FROM fingerprints WHERE victims_id = ?";
-    
-    public static final String DELETE_METADATA = 
-            "DELETE FROM metadata WHERE victims_id = ?";         
 
-    
-    public static final String FIND_BY_POM_PROPERTIES = 
-            "select victims_id from metadata "
+    public static final String INSERT_METADATA =
+            "INSERT INTO metadata (source, victims_id, "
+                + "property, value) VALUES(?, ?, ?, ?, ?)";
+
+    public static final String DELETE_VICTIMS =
+            "DELETE FROM victims WHERE id = ?";
+
+    public static final String DELETE_FINGERPRINT =
+            "DELETE FROM fingerprints WHERE victims_id = ?";
+
+    public static final String DELETE_METADATA =
+            "DELETE FROM metadata WHERE victims_id = ?";
+
+
+    public static final String FIND_BY_POM_PROPERTIES =
+            "SELECT victims_id FROM metadata "
             + "where source like '%pom.properties' and ("
-            + " property = 'groupId'    and value = ?       or "
-            + " property = 'artifactId' and value = ?       or "
+            + " property = 'groupId'    and value = ?  or "
+            + " property = 'artifactId' and value = ?  or "
             + " property = 'version'    and value like ?"
             + ")"
             + "group by victims_id having count(victims_id) = 3";
-    
-    public static final String FIND_BY_IMPLEMENTATION_INFO = 
-            "select victims_id from metadata "
+
+    public static final String FIND_BY_IMPLEMENTATION_INFO =
+            "SELECT victims_id from METADATA "
             + "where source like '%MANIFEST.MF' and ("
-            + " property = 'Implementation-Title'   and value = ?       or "
-            + " property = 'Implementation-Vendor'  and value = ?       or "
+            + " property = 'Implementation-Title'   and value = ? or "
+            + " property = 'Implementation-Vendor'  and value = ? or "
             + " property = 'Implementation-Version' and value like ?"
             + ")"
             + "group by victims_id having count(victims_id) = 3";
-    
-    public static final String FIND_BY_PROPERTY = 
+
+    public static final String FIND_BY_PROPERTY =
             "SELECT vicitms_id FROM metadata WHERE property = ? AND value LIKE ?";
-    
-    public static final String FIND_BY_CLASSNAME = 
+
+    public static final String FIND_BY_CLASSNAME =
             "SELECT victims_id FROM fingerprints WHERE filename = ?";
-    
-    public static final String FIND_BY_CLASS_HASH = 
+
+    public static final String FIND_BY_CLASS_HASH =
             "SELECT victims_id FROM fingerprints WHERE hash = ?";
-    
-    public static final String FIND_BY_JAR_HASH = 
+
+    public static final String FIND_BY_JAR_HASH =
             "SELECT DISTINCT victims_id FROM fingerprints WHERE combined = ?";
-    
+
     public static final String GET_METADATA_SOURCES =
             "SELECT source FROM metadata WHERE victims_id = ?";
-    
-    public static final String GET_METADATA_PROPERTIES = 
+
+    public static final String GET_METADATA_PROPERTIES =
             "SELECT * FROM metadata WHERE victims_id = ? and source = ?";
-    
-    public static final String GET_FINGERPRINT_FILES = 
+
+    public static final String GET_FINGERPRINT_FILES =
             "SELECT * FROM fingerprints WHERE victims_id = ? and algorithm = ? ";
-          
-    public static final String GET_FINGERPRINT_ALGORITHMS = 
+
+    public static final String GET_FINGERPRINT_ALGORITHMS =
             "SELECT algorithm FROM fingerprints WHERE victims_id = ?";
-    
-    public static final String GET_ALL_VICTIMS_IDS = 
+
+    public static final String GET_ALL_VICTIMS_IDS =
             "SELECT id FROM victims";
 
-    public static final String GET_VICTIM_BY_ID = 
+    public static final String GET_VICTIM_BY_ID =
             "SELECT * FROM victims WHERE id = ?";
-    
-    public static final String GET_LATEST = 
+
+    public static final String GET_LATEST =
             "SELECT MAX(created) FROM VICTIMS";
 }

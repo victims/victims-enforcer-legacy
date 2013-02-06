@@ -32,16 +32,16 @@ import junit.framework.TestCase;
  * @author gm
  */
 public class JarMetadataTest extends TestCase {
-    
+
     public JarMetadataTest(String testName) {
         super(testName);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -55,28 +55,31 @@ public class JarMetadataTest extends TestCase {
             Attributes.Name.MANIFEST_VERSION.toString(),
             Attributes.Name.IMPLEMENTATION_TITLE.toString(),
             Attributes.Name.IMPLEMENTATION_URL.toString(),
-            Attributes.Name.IMPLEMENTATION_VENDOR.toString(), 
-            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(), 
+            Attributes.Name.IMPLEMENTATION_VENDOR.toString(),
+            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(),
             Attributes.Name.IMPLEMENTATION_VERSION.toString(),
-            Attributes.Name.MAIN_CLASS.toString()         
+            Attributes.Name.MAIN_CLASS.toString()
         };
-        
+
         System.out.println(Arrays.toString(attribs));
-        try { 
-            
+        try {
+
             ZipFile jar = new ZipFile(new File("testdata", "junit-3.8.1.jar"));
             Jar j = new Jar(jar);
-            
+
             JarMetadata instance = new JarMetadata();
             j.accept(instance);
-          
+
             // FIXME: Actual testing for expected values
             //fail("this test is not finished yet");
-            
+            FileWriter fout = new FileWriter(new File("testdata", "junit-3.8.1.jar.meta"));
+            fout.write(instance.results().toString());
+            fout.close();
+
         } catch(Exception e){
             fail(e.toString());
         }
     }
 
-    
+
 }

@@ -19,13 +19,13 @@
 package com.redhat.victims.archive;
 
 import java.io.InputStream;
-import org.json.JSONObject;
+import org.json.JSONArray;
 
 /**
- * 
+ *
  * @author gm
  */
 public interface ArchiveVisitor {
     public void visit(String name, InputStream entry);
-    public JSONObject result();
+    public JSONArray results();
 }

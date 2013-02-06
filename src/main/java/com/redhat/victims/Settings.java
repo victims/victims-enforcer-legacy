@@ -53,13 +53,13 @@ public final class Settings {
     public static final String URL              = "url";
     public static final String METADATA         = "metadata";
     public static final String FINGERPRINT      = "fingerprint";
-    public static final String DATABASE_PATH    = "path";
     public static final String UPDATE_DATABASE  = "updates";
     public static final String DATABASE_DRIVER  = "dbdriver";
     public static final String DATABASE_URL     = "dburl";
     public static final String TOLERANCE        = "tolerance";
-    
-    
+    public static final String SEARCH_EXTENDED  = "metadataplus";
+
+
     /**
      * Reasonably sensible defaults
      */
@@ -70,17 +70,18 @@ public final class Settings {
         mappings.put(URL, "https://victims-websec.rhcloud.com/service/v1");
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
-        mappings.put(DATABASE_PATH, ".victims");
         mappings.put(DATABASE_URL, "jdbc:derby:.victims;create=true");
         mappings.put(DATABASE_DRIVER, "org.apache.derby.jdbc.EmbeddedDriver");
         mappings.put(TOLERANCE, "0.75");
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
+        mappings.put(SEARCH_EXTENDED, "false");
         defaults = Collections.unmodifiableMap(mappings);
     }
     /**
      * Map containing configuration values
      */
     private Map<String, String> settings;
+
 
     /**
      * Generic interface used validate settings in the configuration
@@ -99,7 +100,7 @@ public final class Settings {
 
                 try {
 
-                    String entry = settings.get(URL);
+                    final String entry = settings.get(URL);
                     if (entry == null || entry.length() <= 0) {
                         throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, URL));
                     }
@@ -113,7 +114,6 @@ public final class Settings {
                     }
 
                     if (!url.getPath().endsWith("service/v1")) {
-                        System.err.println("Doesn't end in service/v1");
                         throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
                     }
 
@@ -224,5 +224,11 @@ public final class Settings {
     public boolean updatesEnabled() {
         String val = settings.get(UPDATE_DATABASE);
         return val != null && val.equalsIgnoreCase(UPDATES_AUTO);
+    }
+
+
+    public boolean extendedMetadataEnabled() {
+        String val = settings.get(SEARCH_EXTENDED);
+        return val != null && val.equalsIgnoreCase("true");
     }
 }
