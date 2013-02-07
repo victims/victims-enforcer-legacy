@@ -144,19 +144,17 @@ public class Database {
             }
 
             /* metadata table entries ---------------------------------------*/
-            for (Map.Entry<String, Map<String, String> > meta : r.meta.entrySet()){
-
-                String source = meta.getKey();
-                Map<String, String> data = meta.getValue();
-
+            //for (Map.Entry<String, Map<String, String> > meta : r.meta.entrySet()){
+            for (MetadataRecord meta : r.meta){
+             
                 changed = 0;
-                for (String property : data.keySet()){
+                for (String property : meta.properties.keySet()){
 
                     stmt = handle().prepareStatement(Query.INSERT_METADATA);
-                    stmt.setString(1, source);
+                    stmt.setString(1, meta.filename);
                     stmt.setInt(2, r.id);
                     stmt.setString(3, property);
-                    stmt.setString(4, data.get(property));
+                    stmt.setString(4, meta.properties.get(property));
 
                     changed += stmt.executeUpdate();
                     stmt.close();
@@ -284,6 +282,7 @@ public class Database {
             stmt = handle().prepareStatement(Query.GET_METADATA_SOURCES);
             stmt.setInt(1, victimsId);
             rs = stmt.executeQuery();
+            List<MetadataRecord> metadataElems = new ArrayList<MetadataRecord>();
 
             while(rs.next()){
 
@@ -297,16 +296,19 @@ public class Database {
                 metadata.setString (2, source);
                 properties = metadata.executeQuery();
 
-                Map<String, String> data = new HashMap<String, String>();
+
+                MetadataRecord metadataElem = new MetadataRecord();
+                metadataElem.filename = source;
                 while(properties.next()){
 
                     String property = properties.getString("property");
                     String value    = properties.getString("value");
-                    data.put(property, value);
+                    metadataElem.properties.put(property, value);
                 }
 
-                record.meta.put(source, data);
+                metadataElems.add(metadataElem);
             }
+            record.meta = metadataElems.toArray(new MetadataRecord[metadataElems.size()]);
 
         } finally {
 

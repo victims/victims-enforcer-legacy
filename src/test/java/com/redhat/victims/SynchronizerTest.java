@@ -98,7 +98,8 @@ public class SynchronizerTest extends TestCase {
             client.synchronizeDatabase(db);
 
             httpd.removeContext(ctx);
-
+            
+            fail("Test not implemented");
             assert(db.list().size() > 0);
 
         } catch (Exception e) {

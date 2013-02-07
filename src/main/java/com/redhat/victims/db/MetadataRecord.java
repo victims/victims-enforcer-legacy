@@ -16,20 +16,23 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 package com.redhat.victims.db;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  *
  * @author gm
  */
-public class HashRecord  {
+class MetadataRecord {
 
-    public HashRecord(){
-        files = new java.util.HashMap<String, String>();
+    public String filename;
+    public Map<String, String> properties;
+
+    public MetadataRecord(){
+        properties = new HashMap<String, String>();
     }
 
-    public String combined;
-    public Map<String, String> files;
 }

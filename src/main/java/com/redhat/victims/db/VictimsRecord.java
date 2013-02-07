@@ -31,8 +31,9 @@ import org.json.JSONObject;
  * @author gm
  */
 public class VictimsRecord  {
+
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
-    
+
     public Status       status;
     public int          id;
     public Date         date;
@@ -42,25 +43,24 @@ public class VictimsRecord  {
     public String       version;
     public String       submitter;
     public Map<String, HashRecord> hashes;
-    public String[]     cves;
-    public Map<String, Map<String, String> > meta;
-    
+
+    public String[]  cves;
+    public MetadataRecord[]   meta;
+
     public VictimsRecord(){
-        
         hashes = new HashMap<String, HashRecord>();
-        meta = new HashMap<String, Map<String, String> >();
     }
-    
+
     public String toJSON(){
         Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
         return gson.toJson(this);
     }
-    
+
     public static VictimsRecord fromJSON(String str){
         Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
         return gson.fromJson(str, VictimsRecord.class);
     }
-    
+
     public static VictimsRecord fromJSON(JSONObject o){
         return fromJSON(o.toString());
     }

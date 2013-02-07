@@ -18,10 +18,17 @@
  */
 package com.redhat.victims.commands;
 
+import com.redhat.victims.IOUtils;
 import com.redhat.victims.Settings;
 import com.redhat.victims.Synchronizer;
 import com.redhat.victims.db.Database;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import junit.framework.TestCase;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -30,8 +37,6 @@ import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  *
@@ -39,8 +44,10 @@ import org.json.JSONObject;
  */
 public class MetadataCommandTest extends TestCase {
 
-    
+    HttpServer httpd;
     Database db;
+
+
     public MetadataCommandTest(String testName) {
         super(testName);
     }
@@ -49,36 +56,59 @@ public class MetadataCommandTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-           
-        db = new Database("org.apache.derby.jdbc.ClientDriver", 
-                "jdbc:derby://localhost:1527/victims-test");
-        
+       db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
+                Settings.defaults.get(Settings.DATABASE_URL));
+        //db = new Database("org.apache.derby.jdbc.ClientDriver",
+        //        "jdbc:derby://localhost:1527/victims-test");
+
         db.dropTables();
         db.createTables();
+
+        httpd = HttpServer.create(new InetSocketAddress(1337), 0);
+
+
+        HttpHandler dummy = new HttpHandler() {
+
+            public void handle(HttpExchange exchange) {
+
+                try {
+                    final byte[] json = IOUtils.slurp(new File("testdata", "dummy.json")).getBytes();
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
+                    exchange.getResponseBody().write(json);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        httpd.createContext("/", dummy);
+        httpd.start();
     }
 
     @Override
     protected void tearDown() throws Exception {
-        
+
         super.tearDown();
         if (db != null) {
             try {
 
                db.dropTables();
-              
+
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
         }
+        httpd.stop(0);
+
     }
 
     public void testExecute() throws Exception {
 
         try {
-            
-            Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
+
+            Synchronizer dbsync = new Synchronizer("http://localhost:1337/service/v2");
             dbsync.synchronizeDatabase(db);
-            
+
             ArtifactHandler handler = new DefaultArtifactHandler();
             Artifact testArtifact = new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null, handler);
             testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
@@ -119,5 +149,5 @@ public class MetadataCommandTest extends TestCase {
         assertEquals(expResult, result);
 
     }
-    
+
 }
