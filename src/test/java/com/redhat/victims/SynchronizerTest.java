@@ -23,6 +23,7 @@ import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -34,12 +35,6 @@ public class SynchronizerTest extends TestCase {
     public SynchronizerTest(String testName) {
         super(testName);
     }
-
-
-
-
-
-
 
     Database db = null;
     HttpServer httpd = null;
@@ -72,34 +67,35 @@ public class SynchronizerTest extends TestCase {
             } catch (Exception e) {
             } finally {
                 db.disconnect();
-                httpd.stop(0);
+
             };
         }
+        httpd.stop(0);
     }
 
     public void testSynchronizeDatabase() {
 
         try {
 
-            // TODO: Actual data
-            HttpHandler handler = new HttpHandler(){
-                public void handle(HttpExchange ex) throws IOException {
+            HttpHandler dummy = new HttpHandler() {
+                public void handle(HttpExchange exchange) {
 
-                    byte[] rsp = "[]".getBytes();
-                    ex.sendResponseHeaders(HttpURLConnection.HTTP_OK, rsp.length);
-                    ex.getResponseBody().write("[]".getBytes());
+                    try {
+                        final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
+                        exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
+                        exchange.getResponseBody().write(json);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             };
 
 
-            HttpContext ctx = httpd.createContext("/", handler);
+            HttpContext ctx = httpd.createContext("/", dummy);
 
             Synchronizer client = new Synchronizer("http://localhost:1337/service/v2");
             client.synchronizeDatabase(db);
 
-            httpd.removeContext(ctx);
-            
-            fail("Test not implemented");
             assert(db.list().size() > 0);
 
         } catch (Exception e) {

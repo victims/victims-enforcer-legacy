@@ -56,7 +56,7 @@ public class MetadataCommandTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-       db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
+        db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
                 Settings.defaults.get(Settings.DATABASE_URL));
         //db = new Database("org.apache.derby.jdbc.ClientDriver",
         //        "jdbc:derby://localhost:1527/victims-test");
@@ -72,7 +72,7 @@ public class MetadataCommandTest extends TestCase {
             public void handle(HttpExchange exchange) {
 
                 try {
-                    final byte[] json = IOUtils.slurp(new File("testdata", "dummy.json")).getBytes();
+                    final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
                     exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
                     exchange.getResponseBody().write(json);
                 } catch (Exception e) {
@@ -92,11 +92,12 @@ public class MetadataCommandTest extends TestCase {
         if (db != null) {
             try {
 
-               db.dropTables();
-
+               //db.dropTables();
+                db.disconnect();
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
+
         }
         httpd.stop(0);
 
@@ -136,6 +137,7 @@ public class MetadataCommandTest extends TestCase {
 
         } catch(Exception e) {
             System.err.println(e.getMessage());
+            e.printStackTrace();
             assertTrue(e instanceof EnforcerRuleException);
         }
 

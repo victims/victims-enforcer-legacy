@@ -83,9 +83,8 @@ public final class FingerprintCommand implements Command {
                 MessageDigest md = MessageDigest.getInstance(algorithm);
                 List<String> jarContent = new ArrayList<String>();
                 while (iter.hasNext()){
-
                     // Update the master hash
-                    String hash = result.getString(iter.next().toString());
+                    String hash = iter.next().toString();
                     md.update(hash.getBytes());
                     jarContent.add(hash);
                 }

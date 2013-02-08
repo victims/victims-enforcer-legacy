@@ -21,8 +21,8 @@ package com.redhat.victims;
 import com.redhat.victims.db.Database;
 import com.redhat.victims.db.VictimsRecord;
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import junit.framework.TestCase;
 import org.json.JSONArray;
@@ -36,7 +36,6 @@ public class DatabaseTest extends TestCase {
 
     Database db;
     JSONArray json;
-    File scriptfile;
 
     @Override
     protected void setUp() throws Exception {
@@ -45,11 +44,11 @@ public class DatabaseTest extends TestCase {
         final String content = IOUtils.slurp(new File("testdata", "test.json"));
         json = new JSONArray(content);
 
-        scriptfile = new File("testdata", "test.sql");
-
         db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
                 Settings.defaults.get(Settings.DATABASE_URL));
-    
+        //db = new Database("org.apache.derby.jdbc.ClientDriver",
+        //        "jdbc:derby://localhost:1527/victims-test");
+
         db.dropTables();
         db.createTables();
 
@@ -76,6 +75,8 @@ public class DatabaseTest extends TestCase {
 
         try {
 
+
+            System.out.println(Arrays.toString(db.list().toArray()));
             for (int i = 0; i < json.length(); i++) {
 
                 JSONObject obj = json.getJSONObject(i).getJSONObject("fields");
@@ -104,6 +105,7 @@ public class DatabaseTest extends TestCase {
             assert(notThere == null);
 
         } catch (Exception e) {
+
             e.printStackTrace();
             fail(e.getMessage());
         }

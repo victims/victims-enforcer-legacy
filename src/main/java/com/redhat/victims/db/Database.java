@@ -121,6 +121,10 @@ public class Database {
             if ((rs = stmt.getGeneratedKeys()) != null && rs.next())
                 r.id = rs.getInt(1);
 
+            else
+                throw new SQLException("FARK! " + r.toJSON());
+
+
             stmt.close();
 
             /* fingerprint table entries -------------------------------------*/
@@ -136,8 +140,8 @@ public class Database {
                     stmt.setInt(1, r.id);
                     stmt.setString(2,algorithm);
                     stmt.setString(3, record.combined);
-                    stmt.setString(4, hash.getKey());   // filename
-                    stmt.setString(5, hash.getValue()); //  hash
+                    stmt.setString(4, hash.getValue()); // filename
+                    stmt.setString(5, hash.getKey());   // hash
                     changed+= stmt.executeUpdate();
                     stmt.close();
                 }
@@ -146,15 +150,15 @@ public class Database {
             /* metadata table entries ---------------------------------------*/
             //for (Map.Entry<String, Map<String, String> > meta : r.meta.entrySet()){
             for (MetadataRecord meta : r.meta){
-             
+
                 changed = 0;
                 for (String property : meta.properties.keySet()){
-
+                    String value = meta.properties.get(property);
                     stmt = handle().prepareStatement(Query.INSERT_METADATA);
                     stmt.setString(1, meta.filename);
                     stmt.setInt(2, r.id);
                     stmt.setString(3, property);
-                    stmt.setString(4, meta.properties.get(property));
+                    stmt.setString(4, value);
 
                     changed += stmt.executeUpdate();
                     stmt.close();
@@ -327,15 +331,17 @@ public class Database {
         PreparedStatement stmt = null;
         try {
 
-            stmt = handle().prepareStatement(Query.DELETE_VICTIMS);
-            stmt.setInt(1, victimsId);
-            stmt.execute();
 
             stmt = handle().prepareStatement(Query.DELETE_FINGERPRINT);
             stmt.setInt(1, victimsId);
             stmt.execute();
 
             stmt = handle().prepareStatement(Query.DELETE_METADATA);
+            stmt.setInt(1, victimsId);
+            stmt.execute();
+
+
+            stmt = handle().prepareStatement(Query.DELETE_VICTIMS);
             stmt.setInt(1, victimsId);
             stmt.execute();
 
@@ -475,6 +481,7 @@ public class Database {
      public VictimsRecord[] findByClassSet(String[] hashes, double tolerance) throws SQLException {
 
         int i;
+        final String whitelist = "[A-Za-z0-9]+";
         List<VictimsRecord> matches = new ArrayList<VictimsRecord>();
         long hits = Math.round(tolerance * hashes.length);
 
@@ -507,7 +514,7 @@ public class Database {
             stmt = handle().prepareStatement(victimsQuery);
             for (i = 0; i < hashes.length; i++){
 
-                if (! hashes[i].matches("\\w")){
+                if (! hashes[i].matches(whitelist)){
                     throw new SQLException("Tainted input data: " + hashes[i]);
                 }
                 stmt.setString(i + 1, hashes[i]);

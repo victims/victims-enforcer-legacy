@@ -42,12 +42,12 @@ public class Query {
 
     public static final String CREATE_FINGERPRINT_TABLE =
             "CREATE TABLE fingerprints ("
+                + "id          INTEGER        NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
                 + "victims_id  INTEGER         NOT NULL,"
                 + "algorithm   VARCHAR(255)    NOT NULL,"
                 + "combined    VARCHAR(255)    NOT NULL,"
                 + "filename    VARCHAR(255)    NOT NULL,"
                 + "hash        VARCHAR(255)    NOT NULL,"
-                + "PRIMARY KEY(hash), "
                 + "FOREIGN KEY(victims_id) REFERENCES victims(id))";
 
     public static final String CREATE_METADATA_TABLE =
@@ -70,7 +70,7 @@ public class Query {
 
     public static final String INSERT_METADATA =
             "INSERT INTO metadata (source, victims_id, "
-                + "property, value) VALUES(?, ?, ?, ?, ?)";
+                + "property, value) VALUES(?, ?, ?, ?)";
 
     public static final String DELETE_VICTIMS =
             "DELETE FROM victims WHERE id = ?";

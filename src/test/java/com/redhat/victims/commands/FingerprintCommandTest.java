@@ -18,10 +18,16 @@
  */
 package com.redhat.victims.commands;
 
+import com.redhat.victims.IOUtils;
 import com.redhat.victims.Settings;
 import com.redhat.victims.Synchronizer;
 import com.redhat.victims.db.Database;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import junit.framework.TestCase;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -38,6 +44,7 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 public class FingerprintCommandTest extends TestCase {
 
     private Database db;
+    private HttpServer httpd;
 
     public FingerprintCommandTest(String testName) {
         super(testName);
@@ -51,6 +58,26 @@ public class FingerprintCommandTest extends TestCase {
                 "jdbc:derby://localhost:1527/victims-test");
 
         db.dropTables();
+        db.createTables();
+
+        httpd = HttpServer.create(new InetSocketAddress(1337), 0);
+
+
+        HttpHandler dummy = new HttpHandler() {
+            public void handle(HttpExchange exchange) {
+
+                try {
+                    final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
+                    exchange.getResponseBody().write(json);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        httpd.createContext("/", dummy);
+        httpd.start();
 
     }
 
@@ -66,6 +93,7 @@ public class FingerprintCommandTest extends TestCase {
                 System.err.println(e.getMessage());
             }
         }
+        httpd.stop(0);
     }
 
     public void testExecute() throws Exception {
@@ -73,7 +101,7 @@ public class FingerprintCommandTest extends TestCase {
         try {
 
             db.createTables();
-            Synchronizer dbsync = new Synchronizer("http://localhost:5000/service/v2");
+            Synchronizer dbsync = new Synchronizer("http://localhost:1337/service/v2");
             dbsync.synchronizeDatabase(db);
 
             ArtifactHandler handler = new DefaultArtifactHandler();
