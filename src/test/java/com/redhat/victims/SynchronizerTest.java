@@ -19,12 +19,10 @@
 package com.redhat.victims;
 
 import com.redhat.victims.db.Database;
-import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.File;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import junit.framework.TestCase;
@@ -85,13 +83,13 @@ public class SynchronizerTest extends TestCase {
                         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
                         exchange.getResponseBody().write(json);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
+                        fail(e.getMessage());
                     }
                 }
             };
 
-
-            HttpContext ctx = httpd.createContext("/", dummy);
+            /* HttpContext ctx = */ httpd.createContext("/", dummy);
 
             Synchronizer client = new Synchronizer("http://localhost:1337/service/v2");
             client.synchronizeDatabase(db);
@@ -99,7 +97,7 @@ public class SynchronizerTest extends TestCase {
             assert(db.list().size() > 0);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             fail("Test failed: " + e.getMessage());
         } finally {
         }

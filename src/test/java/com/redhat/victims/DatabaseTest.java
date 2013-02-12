@@ -21,8 +21,6 @@ package com.redhat.victims;
 import com.redhat.victims.db.Database;
 import com.redhat.victims.db.VictimsRecord;
 import java.io.File;
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import junit.framework.TestCase;
 import org.json.JSONArray;
@@ -75,8 +73,7 @@ public class DatabaseTest extends TestCase {
 
         try {
 
-
-            System.out.println(Arrays.toString(db.list().toArray()));
+            //System.out.println(Arrays.toString(db.list().toArray()));
             for (int i = 0; i < json.length(); i++) {
 
                 JSONObject obj = json.getJSONObject(i).getJSONObject("fields");
@@ -106,7 +103,7 @@ public class DatabaseTest extends TestCase {
 
         } catch (Exception e) {
 
-            e.printStackTrace();
+            //e.printStackTrace();
             fail(e.getMessage());
         }
     }

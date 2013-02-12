@@ -54,15 +54,16 @@ public class FingerprintCommandTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        db = new Database("org.apache.derby.jdbc.ClientDriver",
-                "jdbc:derby://localhost:1527/victims-test");
+        //db = new Database("org.apache.derby.jdbc.ClientDriver",
+        //        "jdbc:derby://localhost:1527/victims-test");
+        db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
+                Settings.defaults.get(Settings.DATABASE_URL));
 
         db.dropTables();
         db.createTables();
 
         httpd = HttpServer.create(new InetSocketAddress(1337), 0);
-
-
+        
         HttpHandler dummy = new HttpHandler() {
             public void handle(HttpExchange exchange) {
 
