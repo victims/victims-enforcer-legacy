@@ -94,6 +94,8 @@ public class SynchronizerTest extends TestCase {
             Synchronizer client = new Synchronizer("http://localhost:1337/service/v2");
             client.synchronizeDatabase(db);
 
+
+
             assert(db.list().size() > 0);
 
         } catch (Exception e) {

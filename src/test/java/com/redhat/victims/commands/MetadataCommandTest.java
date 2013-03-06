@@ -105,6 +105,7 @@ public class MetadataCommandTest extends TestCase {
 
     public void testExecute() throws Exception {
 
+        boolean thrownError = false;
         try {
 
             Synchronizer dbsync = new Synchronizer("http://localhost:1337/service/v2");
@@ -136,9 +137,14 @@ public class MetadataCommandTest extends TestCase {
             cmd.execute(ctx);
 
         } catch(Exception e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
             assertTrue(e instanceof EnforcerRuleException);
+            thrownError = true;
+
+        } finally {
+            if (! thrownError)
+                fail("Exception expected");
+
         }
 
     }

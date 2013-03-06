@@ -64,7 +64,7 @@ public final class ExecutionContext {
     }
 
     /**
-     * Applies the given settings to the execution conotext.
+     * Applies the given settings to the execution context.
      */
     public void setSettings(final Settings setup) {
         this.settings = setup;
@@ -88,7 +88,7 @@ public final class ExecutionContext {
 
     /**
      * Send all messages to this log.
-     * @param l The log to assoicate with this execution context.
+     * @param l The log to associate with this execution context.
      */
     public void setLog(Log l) {
         this.log = l;

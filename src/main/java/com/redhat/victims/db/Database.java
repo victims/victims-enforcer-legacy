@@ -121,11 +121,7 @@ public class Database {
             if ((rs = stmt.getGeneratedKeys()) != null && rs.next())
                 r.id = rs.getInt(1);
 
-            else
-                throw new SQLException("FARK! " + r.toJSON());
-
-
-            stmt.close();
+           stmt.close();
 
             /* fingerprint table entries -------------------------------------*/
             for (Map.Entry<String, HashRecord> hashes : r.hashes.entrySet()){
@@ -431,6 +427,9 @@ public class Database {
         PreparedStatement stmt = null;
         try {
 
+            System.err.println("Running query..");
+            System.err.println(Query.FIND_BY_CLASS_HASH);
+            System.err.println("HASH: " + hash);
             stmt = handle().prepareStatement(Query.FIND_BY_CLASS_HASH);
             stmt.setString(1, hash);
 
@@ -503,7 +502,7 @@ public class Database {
         final String victimsQuery = "select victims_id from ("
                 + "select * from fingerprints where hash in ("
                 + fields.toString()
-                + ")) properties group by victims_id having count(victims_id) = ?";
+                + ")) properties group by victims_id";//having count(victims_id) = ?";
 
 
         ResultSet rs = null;
@@ -519,8 +518,10 @@ public class Database {
                 }
                 stmt.setString(i + 1, hashes[i]);
             }
-            stmt.setLong(i + 1, hits);
+            //stmt.setLong(i + 1, hits);
             rs = stmt.executeQuery();
+
+
 
             while (rs.next()){
                 matches.add(get(rs.getInt(1)));

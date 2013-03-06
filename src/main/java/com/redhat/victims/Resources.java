@@ -171,8 +171,8 @@ public class Resources extends ListResourceBundle  {
                                             + "Victims database. You should upgrade to a new version to patches "
                                             + "the reported vulnerabilities. The affected artifact ID is '%s'." },
 
-            { INFO_FINGERPRINT_HEADING,     "Vulnerable artifact matched a database record"                     },
-            { INFO_CLASSMATCH_HEADING,      "Vulnerable artifact matches %s%% of classes within a database record" },
+            { INFO_FINGERPRINT_HEADING,     "Artifact matches a record in the vulnerability database"                     },
+            { INFO_CLASSMATCH_HEADING,      "Artifact contains %s%% of the classes in a record in the vulnerability database" },
 
 
             { FATAL_METADATA_HEADING,       "Detected potentially vulnerable artifact"                          },

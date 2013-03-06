@@ -115,16 +115,28 @@ public class JarMetadata implements ArchiveVisitor {
      */
     public void visit(String name, InputStream entry) {
 
-        JSONObject obj;
+        JSONObject obj = null;
         try {
             if (name.endsWith("pom.properties")) {
                 obj = getPomProperties(entry);
                 obj.put("filename", name);
                 metadata.put(obj);
             } else if (name.endsWith("MANIFEST.MF")) {
-                obj = getManifest(entry);
-                obj.put("filename", name);
-                metadata.put(obj);
+
+                try { 
+
+                    if (obj == null)
+                        throw new JSONException("Doesn't exist");
+
+                    obj.get(name);
+
+                } catch (JSONException e){
+
+                    // not found
+                    obj = getManifest(entry);
+                    obj.put("filename", name);
+                    metadata.put(obj);
+                }
             }
         }
         catch (IOException e){}

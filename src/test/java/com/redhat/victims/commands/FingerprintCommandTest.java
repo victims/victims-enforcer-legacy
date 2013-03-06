@@ -54,8 +54,8 @@ public class FingerprintCommandTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        //db = new Database("org.apache.derby.jdbc.ClientDriver",
-        //        "jdbc:derby://localhost:1527/victims-test");
+//        db = new Database("org.apache.derby.jdbc.ClientDriver",
+//                "jdbc:derby://localhost:1527/victims-test");
         db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),
                 Settings.defaults.get(Settings.DATABASE_URL));
 
@@ -63,7 +63,7 @@ public class FingerprintCommandTest extends TestCase {
         db.createTables();
 
         httpd = HttpServer.create(new InetSocketAddress(1337), 0);
-        
+
         HttpHandler dummy = new HttpHandler() {
             public void handle(HttpExchange exchange) {
 
@@ -99,6 +99,7 @@ public class FingerprintCommandTest extends TestCase {
 
     public void testExecute() throws Exception {
 
+        boolean found = false;
         try {
 
             db.createTables();
@@ -143,7 +144,13 @@ public class FingerprintCommandTest extends TestCase {
         } catch (Exception e) {
             e.printStackTrace();
             assertTrue(e instanceof EnforcerRuleException);
+            found = true;
+
+        } finally {
+            if (!found)
+               fail("Failed to detect vulnerability from hashes");
         }
+
 
     }
 

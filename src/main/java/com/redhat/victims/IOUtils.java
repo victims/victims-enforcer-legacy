@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import org.apache.maven.plugin.logging.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 /**
  * A collection of miscellaneous utilities used throughout the plug-in to format
@@ -192,9 +193,46 @@ public final class IOUtils {
 
             try {
 
+                String val;
                 String key = (String) i.next();
-                String val = indent(indenting, wrap(wrapping, String.valueOf(o.get(key))));
-                sb.append(String.format(formatting, key, val));
+                JSONArray array;
+
+                // handle array as value
+                try {
+                    array = o.getJSONArray(key);
+                } catch (JSONException e){
+                    array = null;
+                }
+
+                if (array != null) {
+
+                    for (int k = 0; k < array.length(); k++){
+
+                        try {
+
+                            JSONObject nestedObject = array.getJSONObject(k);
+                            for  (String subkey : JSONObject.getNames(nestedObject)){
+
+                                Object nestedValue = nestedObject.get(subkey);
+                                String nestedString = String.valueOf(nestedValue);
+                                val = indent(indenting + 2, wrap(wrapping, nestedString));
+                                sb.append(String.format(formatting, subkey, val));
+                            }
+
+                        } catch (JSONException e){
+
+                            val = indent(indenting, wrap(wrapping, String.valueOf(array)));
+                            sb.append(String.format(formatting, key, val));
+
+                        }
+                    }
+
+                } else {
+                    val = indent(indenting, wrap(wrapping, String.valueOf(o.get(key))));
+                    sb.append(String.format(formatting, key, val));
+                }
+
+
 
             } catch (JSONException e) {
                 sb.append("Invalid format of JSON object: ").append(o.toString()).append(String.format("%n"));
@@ -236,7 +274,7 @@ public final class IOUtils {
             }
         }
     }
-    
+
 
     /**
      * Formats a message appropriately based on the resource bundle key
@@ -284,5 +322,5 @@ public final class IOUtils {
             l.error(e);
         }
     }
-    
+
  }

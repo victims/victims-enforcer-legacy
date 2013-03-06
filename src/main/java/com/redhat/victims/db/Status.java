@@ -19,9 +19,9 @@
 package com.redhat.victims.db;
 
 /**
- * @author gm
+ * @author gmurphy
  */
-  
+
 public enum Status {
     SUBMITTED,
     RELEASED

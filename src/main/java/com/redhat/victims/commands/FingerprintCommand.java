@@ -22,7 +22,10 @@ import com.redhat.victims.*;
 import com.redhat.victims.archive.java.FingerprintClassfile;
 import com.redhat.victims.archive.java.Jar;
 import com.redhat.victims.db.VictimsRecord;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -75,6 +78,7 @@ public final class FingerprintCommand implements Command {
                 FingerprintClassfile visitor = new FingerprintClassfile(algorithm);
                 jarfile.accept(visitor);
                 JSONObject result = visitor.results().getJSONObject(0);
+
 
                 // Create a master hash
                 // FIXME: This is pointless really. The master hash should
@@ -142,8 +146,10 @@ public final class FingerprintCommand implements Command {
             ctx.getLog().error(e);
 
         } catch (JSONException e) {
+
             ctx.getLog().error(e);
         } catch (SQLException e){
+
             ctx.getLog().error(e);
         }
     }

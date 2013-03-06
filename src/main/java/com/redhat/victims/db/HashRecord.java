@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  *
- * @author gm
+ * @author gmurphy
  */
 public class HashRecord  {
 

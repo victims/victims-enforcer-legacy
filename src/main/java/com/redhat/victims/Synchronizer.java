@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import org.apache.commons.httpclient.HttpClient;
@@ -79,6 +80,38 @@ public class Synchronizer {
         return String.format("%s/remove/%s/", baseURL, dateString);
     }
 
+    private String progressString(int done, int total){
+
+        int bars, i;
+        double completed,  kb;
+        String percent, progress;
+        StringBuffer sb;
+
+        completed = (double) done / (double) total;
+        sb = new StringBuffer();
+        sb.append("[");
+
+        bars = (int)(completed * 10);
+        for (i = 0; i < bars; i++){
+            sb.append("#");
+        }
+
+        for (i = bars; i < 10; i++){
+            sb.append(" ");
+        }
+        sb.append(" ]");
+
+        kb = ((double)total / 1024);
+        percent = new DecimalFormat(" ###.00%").format(completed);
+        progress = new DecimalFormat("###.## kb").format(kb); 
+
+        sb.append(percent);
+        sb.append(" of ");
+        sb.append(progress);
+
+        return sb.toString();
+    }
+
     /**
      * Actual synchronization mechanism abstraction as essentially does the same
      * thing for update / delete.
@@ -103,8 +136,24 @@ public class Synchronizer {
         byte[] buf = new byte[1024];
         FileOutputStream out = new FileOutputStream(tmp);
         InputStream in = get.getResponseBodyAsStream();
-        while(in.read(buf) > 0){
+
+        String header = get.getResponseHeader("Content-Length").getValue();
+        int length = Integer.parseInt(header);
+        int nread = 0;
+        int ntotal = 0;
+        int threshold = 1;
+
+        while ((nread = in.read(buf)) > 0){
+
             out.write(buf);
+            ntotal += nread;
+
+            // limit the progress output
+            int progress = (int)((double) ntotal / (double)length * 100);
+            if ( progress / 10 == threshold){
+                log.info(progressString(ntotal, length));
+                threshold++;
+            }
         }
 
         in.close();

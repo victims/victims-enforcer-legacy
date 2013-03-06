@@ -27,8 +27,7 @@ import java.util.Map;
 import org.json.JSONObject;
 
 /**
- *
- * @author gm
+ * @author gmurphy
  */
 public class VictimsRecord  {
 

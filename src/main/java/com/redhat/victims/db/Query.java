@@ -20,7 +20,7 @@ package com.redhat.victims.db;
 
 /**
  *
- * @author gm
+ * @author gmurphy
  */
 public class Query {
 
@@ -113,7 +113,7 @@ public class Query {
             "SELECT DISTINCT victims_id FROM fingerprints WHERE combined = ?";
 
     public static final String GET_METADATA_SOURCES =
-            "SELECT source FROM metadata WHERE victims_id = ?";
+            "SELECT DISTINCT source FROM metadata WHERE victims_id = ?";
 
     public static final String GET_METADATA_PROPERTIES =
             "SELECT * FROM metadata WHERE victims_id = ? and source = ?";

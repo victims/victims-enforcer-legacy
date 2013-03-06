@@ -49,7 +49,7 @@ public class VictimsRecordTest extends TestCase {
 
         System.out.println("toJSON");
         VictimsRecord rec = new VictimsRecord();
-        rec.cves = new String[]{ "CVE-1001", "CVE-1002" };
+        rec.cves = new String[]{"CVE-1001, CVE-1002"};
         rec.date = new java.util.Date();
         rec.format = "jar";
         rec.id = 1234;
