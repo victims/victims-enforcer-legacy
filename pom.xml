@@ -81,6 +81,11 @@
       <artifactId>derbyclient</artifactId>
       <version>10.9.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.bcel</groupId>
+      <artifactId>bcel</artifactId>
+      <version>5.2</version>
+    </dependency>
   </dependencies>
   <scm>
     <connection>scm:git:git@github.com:gcmurphy/enforce-victims-rule.git</connection>
