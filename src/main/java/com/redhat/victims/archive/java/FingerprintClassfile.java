@@ -111,7 +111,6 @@ public class FingerprintClassfile implements ArchiveVisitor {
                     ConstantLong lng = (ConstantLong) type;
                     return String.valueOf(lng.getBytes());
 
-
                 case Constants.CONSTANT_Methodref:
                     ConstantMethodref methRef = (ConstantMethodref) type;
                     return constantValue(methRef.getClassIndex(), cp) + " " +
@@ -151,7 +150,7 @@ public class FingerprintClassfile implements ArchiveVisitor {
 
         StringBuilder buf = new StringBuilder();
 
-        int index;
+        int index, rem, pad, def, off, low, hi, npair;
         byte indexbyte1, indexbyte2;
 
         short opcode;
@@ -162,13 +161,56 @@ public class FingerprintClassfile implements ArchiveVisitor {
             opcode = (short) bytes.readUnsignedByte();
             buf.append(opcode);
 
-
-            // adopted from apache bcel codeToString
             switch(opcode){
 
                 case Constants.TABLESWITCH:
+
+                    pad = 0;
+                    if ((rem = bytes.getIndex() % 4) != 0){
+                        pad = 4 - rem;
+                    }
+                    for (int i = 0; i < pad; i++){
+                        buf.append(bytes.readByte());
+                    }
+
+                    def = bytes.readInt();
+                    buf.append(def);
+
+                    low = bytes.readInt();
+                    buf.append(low);
+
+                    hi = bytes.readInt();
+                    buf.append(hi);
+
+                    for (int i = 0; i < (hi - low + 1); i++){
+                        buf.append(bytes.readInt());
+                    }
+
+                    break;
+
+
                 case Constants.LOOKUPSWITCH:
-                    throw new IOException("Variable length operations not implemented yet!");
+
+                    pad = 0;
+                    if ((rem = bytes.getIndex() % 4) != 0){
+                        pad = 4 - rem;
+                    }
+                    for (int i = 0; i < pad; i++){
+                        buf.append(bytes.readByte());
+                    }
+
+                    def = bytes.readInt();
+                    buf.append(def);
+
+                    npair = bytes.readInt();
+                    buf.append(npair);
+
+                    for (int i = 0; i < npair; i++){
+                        buf.append(bytes.readInt()); // match
+                        buf.append(bytes.readInt()); // jump
+                    }
+
+                    break;
 
                 case Constants.GOTO:
                 case Constants.IFEQ:
@@ -306,6 +348,24 @@ public class FingerprintClassfile implements ArchiveVisitor {
         return buf.toString();
     }
 
+// Useful when debugging digest input format
+    //
+//    private class MDProxy {
+//
+//        private MessageDigest md;
+//        public MDProxy(MessageDigest d){
+//            md = d;
+//        }
+//
+//        public void update(byte[] data){
+//            System.out.println(new String(data));
+//            md.update(data);
+//        }
+//
+//        public byte[] digest(){
+//            return md.digest();
+//        }
+//    }
 
 
     /**
@@ -342,14 +402,12 @@ public class FingerprintClassfile implements ArchiveVisitor {
                 md.update(ref.getBytes());
 
                 // interfaces (implements)
-                try {
-                    for (JavaClass jc : klass.getAllInterfaces()){
-                        // implemented interface name
-                        ref = constantValue(jc.getClassNameIndex(), cpool);
-                        md.update(ref.getBytes());
-                    }
-                } catch (ClassNotFoundException e){
+                for (int index : klass.getInterfaceIndices()) {
+                    // implemented interface name
+                    ref = constantValue(index, cpool);
+                    md.update(ref.getBytes());
                 }
+
 
                 // fields
                 for (Field f : klass.getFields()){
