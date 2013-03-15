@@ -20,8 +20,11 @@ package com.redhat.victims.archive.java;
 
 import com.redhat.victims.archive.ArchiveVisitor;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.bcel.Constants;
@@ -231,12 +234,14 @@ public class FingerprintClassfile implements ArchiveVisitor {
                 case Constants.IF_ICMPLT:
                 case Constants.IF_ICMPNE:
 
+
                     buf.append(bytes.readShort());
 
                     break;
 
                 case Constants.GOTO_W:
                 case Constants.JSR_W:
+
                     buf.append(bytes.readInt());
                     break;
 
@@ -253,10 +258,11 @@ public class FingerprintClassfile implements ArchiveVisitor {
                 case Constants.NEWARRAY:
                 case Constants.RET:
                     if (wide){
+
                         buf.append(bytes.readUnsignedShort());
                         wide = false;
                     } else {
-                        buf.append(bytes.readByte());
+                        buf.append(bytes.readUnsignedByte());
                     }
                     break;
 
@@ -328,15 +334,25 @@ public class FingerprintClassfile implements ArchiveVisitor {
                             switch(Constants.TYPE_OF_OPERANDS[opcode][i]){
 
                                 case Constants.T_BYTE:
-                                    buf.append(bytes.readByte());
+
+                                    buf.append(bytes.readUnsignedByte());
                                     break;
 
                                 case Constants.T_SHORT:
-                                    buf.append(bytes.readShort());
+                                    // just process in byte form
+                                    //short s = bytes.readShort();
+                                    //buf.append(s);
+                                    buf.append(bytes.readUnsignedByte());
+                                    buf.append(bytes.readUnsignedByte());
                                     break;
 
                                 case Constants.T_INT:
-                                    buf.append(bytes.readInt());
+//                                    int integer = bytes.readInt();
+//                                    buf.append(integer);
+                                    buf.append(bytes.readUnsignedByte());
+                                    buf.append(bytes.readUnsignedByte());
+                                    buf.append(bytes.readUnsignedByte());
+                                    buf.append(bytes.readUnsignedByte());
                                     break;
 
                             }
@@ -350,22 +366,29 @@ public class FingerprintClassfile implements ArchiveVisitor {
 
 // Useful when debugging digest input format
     //
-//    private class MDProxy {
-//
-//        private MessageDigest md;
-//        public MDProxy(MessageDigest d){
-//            md = d;
-//        }
-//
-//        public void update(byte[] data){
-//            System.out.println(new String(data));
-//            md.update(data);
-//        }
-//
-//        public byte[] digest(){
-//            return md.digest();
-//        }
-//    }
+    private class MDProxy {
+
+        private MessageDigest md;
+        private StringBuffer sb;
+
+        public MDProxy(MessageDigest d){
+            md = d;
+            sb = new StringBuffer();
+        }
+
+        public void update(byte[] data){
+            sb.append(new String(data));
+            md.update(data);
+        }
+
+        public byte[] digest(){
+            return md.digest();
+        }
+
+        public String getValue(){
+            return sb.toString();
+        }
+    }
 
 
     /**
@@ -383,7 +406,8 @@ public class FingerprintClassfile implements ArchiveVisitor {
 
                 String ref;
                 JavaClass klass = parser.parse();
-                MessageDigest md = MessageDigest.getInstance(algorithm);
+                MessageDigest d = MessageDigest.getInstance(algorithm);
+                MDProxy md = new MDProxy(d);
                 ConstantPool cpool = klass.getConstantPool();
 
                 // source file
@@ -455,6 +479,13 @@ public class FingerprintClassfile implements ArchiveVisitor {
                     }
 
                 }
+
+                // TODO REMOVE - This is for debug purposes only
+                String outfile = name.substring(name.lastIndexOf(File.separator), name.length());
+                File f = new File("dump", outfile + algorithm + ".dump");
+                PrintWriter fout = new PrintWriter(new FileWriter(f));
+                fout.write(md.getValue());
+                fout.close();
 
                 String h = new String(Hex.encodeHex(md.digest()));
                 fingerprint.put(h, name);

@@ -24,6 +24,7 @@ import com.redhat.victims.archive.java.Jar;
 import com.redhat.victims.db.VictimsRecord;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
@@ -78,7 +79,7 @@ public final class FingerprintCommand implements Command {
                 FingerprintClassfile visitor = new FingerprintClassfile(algorithm);
                 jarfile.accept(visitor);
                 JSONObject result = visitor.results().getJSONObject(0);
-
+           
 
                 // Create a master hash
                 // FIXME: This is pointless really. The master hash should
