@@ -364,31 +364,31 @@ public class FingerprintClassfile implements ArchiveVisitor {
         return buf.toString();
     }
 
-// Useful when debugging digest input format
-    //
-    private class MDProxy {
-
-        private MessageDigest md;
-        private StringBuffer sb;
-
-        public MDProxy(MessageDigest d){
-            md = d;
-            sb = new StringBuffer();
-        }
-
-        public void update(byte[] data){
-            sb.append(new String(data));
-            md.update(data);
-        }
-
-        public byte[] digest(){
-            return md.digest();
-        }
-
-        public String getValue(){
-            return sb.toString();
-        }
-    }
+//// Useful when debugging digest input format
+//    //
+//    private class MDProxy {
+//
+//        private MessageDigest md;
+//        private StringBuffer sb;
+//
+//        public MDProxy(MessageDigest d){
+//            md = d;
+//            sb = new StringBuffer();
+//        }
+//
+//        public void update(byte[] data){
+//            sb.append(new String(data));
+//            md.update(data);
+//        }
+//
+//        public byte[] digest(){
+//            return md.digest();
+//        }
+//
+//        public String getValue(){
+//            return sb.toString();
+//        }
+//    }
 
 
     /**
@@ -406,8 +406,8 @@ public class FingerprintClassfile implements ArchiveVisitor {
 
                 String ref;
                 JavaClass klass = parser.parse();
-                MessageDigest d = MessageDigest.getInstance(algorithm);
-                MDProxy md = new MDProxy(d);
+                MessageDigest md = MessageDigest.getInstance(algorithm);
+
                 ConstantPool cpool = klass.getConstantPool();
 
                 // source file
@@ -479,13 +479,6 @@ public class FingerprintClassfile implements ArchiveVisitor {
                     }
 
                 }
-
-                // TODO REMOVE - This is for debug purposes only
-                String outfile = name.substring(name.lastIndexOf(File.separator), name.length());
-                File f = new File("dump", outfile + algorithm + ".dump");
-                PrintWriter fout = new PrintWriter(new FileWriter(f));
-                fout.write(md.getValue());
-                fout.close();
 
                 String h = new String(Hex.encodeHex(md.digest()));
                 fingerprint.put(h, name);
