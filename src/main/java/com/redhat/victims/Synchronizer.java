@@ -103,7 +103,7 @@ public class Synchronizer {
 
         kb = ((double)total / 1024);
         percent = new DecimalFormat(" ###.00%").format(completed);
-        progress = new DecimalFormat("###.## kb").format(kb); 
+        progress = new DecimalFormat("###.## kb").format(kb);
 
         sb.append(percent);
         sb.append(" of ");
@@ -129,6 +129,8 @@ public class Synchronizer {
         HttpClient client = new HttpClient();
         client.executeMethod(get);
 
+
+
         File tmp = new File(".victims.json");
         tmp.delete();
         tmp.createNewFile();
@@ -143,7 +145,8 @@ public class Synchronizer {
         int ntotal = 0;
         int threshold = 1;
 
-        while ((nread = in.read(buf)) > 0){
+
+        while ((nread = in.read(buf)) >= 0){
 
             out.write(buf);
             ntotal += nread;
