@@ -1,3 +1,4 @@
 language: java
 jdk:
   - openjdk7
+install: mvn install -DskipTests=true -Dgpg.skip=true
