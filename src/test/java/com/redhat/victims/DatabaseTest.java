@@ -77,9 +77,6 @@ public class DatabaseTest extends TestCase {
             for (int i = 0; i < json.length(); i++) {
 
                 JSONObject obj = json.getJSONObject(i).getJSONObject("fields");
-                String dateString = obj.getString("date").split("\\.")[0];
-                obj.put("date", dateString);
-
                 VictimsRecord record = VictimsRecord.fromJSON(obj);
                 db.insert(record);
             }
@@ -103,7 +100,7 @@ public class DatabaseTest extends TestCase {
 
         } catch (Exception e) {
 
-            //e.printStackTrace();
+            e.printStackTrace();
             fail(e.getMessage());
         }
     }
