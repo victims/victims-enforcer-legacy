@@ -31,7 +31,7 @@ import org.json.JSONObject;
  */
 public class VictimsRecord  {
 
-    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS";
 
     public Status       status;
     public int          id;

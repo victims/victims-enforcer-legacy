@@ -79,6 +79,7 @@ public class SynchronizerTest extends TestCase {
                 public void handle(HttpExchange exchange) {
 
                     try {
+                       
                         final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
                         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
                         exchange.getResponseBody().write(json);
@@ -92,6 +93,7 @@ public class SynchronizerTest extends TestCase {
             /* HttpContext ctx = */ httpd.createContext("/", dummy);
 
             Synchronizer client = new Synchronizer("http://localhost:1337/service/v2");
+            //Synchronizer client = new Synchronizer("http://victims-websec.rhcloud.com/service/v2");
             client.synchronizeDatabase(db);
 
 

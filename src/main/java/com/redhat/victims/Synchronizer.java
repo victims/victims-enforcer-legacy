@@ -18,14 +18,15 @@
  */
 package com.redhat.victims;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.redhat.victims.db.Database;
 import com.redhat.victims.db.VictimsRecord;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import org.apache.commons.httpclient.HttpClient;
@@ -33,8 +34,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
 
 /**
  * The VictimClient class provides the mechanism for synchronizing data within a
@@ -80,37 +80,37 @@ public class Synchronizer {
         return String.format("%s/remove/%s/", baseURL, dateString);
     }
 
-    private String progressString(int done, int total){
-
-        int bars, i;
-        double completed,  kb;
-        String percent, progress;
-        StringBuffer sb;
-
-        completed = (double) done / (double) total;
-        sb = new StringBuffer();
-        sb.append("[");
-
-        bars = (int)(completed * 10);
-        for (i = 0; i < bars; i++){
-            sb.append("#");
-        }
-
-        for (i = bars; i < 10; i++){
-            sb.append(" ");
-        }
-        sb.append(" ]");
-
-        kb = ((double)total / 1024);
-        percent = new DecimalFormat(" ###.00%").format(completed);
-        progress = new DecimalFormat("###.## kb").format(kb);
-
-        sb.append(percent);
-        sb.append(" of ");
-        sb.append(progress);
-
-        return sb.toString();
-    }
+//    private String progressString(int done, int total){
+//
+//        int bars, i;
+//        double completed,  kb;
+//        String percent, progress;
+//        StringBuffer sb;
+//
+//        completed = (double) done / (double) total;
+//        sb = new StringBuffer();
+//        sb.append("[");
+//
+//        bars = (int)(completed * 10);
+//        for (i = 0; i < bars; i++){
+//            sb.append("#");
+//        }
+//
+//        for (i = bars; i < 10; i++){
+//            sb.append(" ");
+//        }
+//        sb.append(" ]");
+//
+//        kb = ((double)total / 1024);
+//        percent = new DecimalFormat(" ###.00%").format(completed);
+//        progress = new DecimalFormat("###.## kb").format(kb);
+//
+//        sb.append(percent);
+//        sb.append(" of ");
+//        sb.append(progress);
+//
+//        return sb.toString();
+//    }
 
     /**
      * Actual synchronization mechanism abstraction as essentially does the same
@@ -129,55 +129,20 @@ public class Synchronizer {
         HttpClient client = new HttpClient();
         client.executeMethod(get);
 
+        Gson gson = new GsonBuilder().setDateFormat(VictimsRecord.DATE_FORMAT).create();
+        InputStream response = get.getResponseBodyAsStream();
+        JsonReader json = new JsonReader(new InputStreamReader(response, "UTF-8"));
+        json.beginArray();
+        while(json.hasNext()){
 
-
-        File tmp = new File(".victims.json");
-        tmp.delete();
-        tmp.createNewFile();
-
-        byte[] buf = new byte[1024];
-        FileOutputStream out = new FileOutputStream(tmp);
-        InputStream in = get.getResponseBodyAsStream();
-
-        String header = get.getResponseHeader("Content-Length").getValue();
-        int length = Integer.parseInt(header);
-        int nread = 0;
-        int ntotal = 0;
-        int threshold = 1;
-
-
-        while ((nread = in.read(buf)) >= 0){
-
-            out.write(buf);
-            ntotal += nread;
-
-            // limit the progress output
-            int progress = (int)((double) ntotal / (double)length * 100);
-            if ( progress / 10 == threshold){
-                log.info(progressString(ntotal, length));
-                threshold++;
-            }
+            json.beginObject();
+            json.nextName(); // discard fields
+            VictimsRecord v = gson.fromJson(json, VictimsRecord.class);
+            db.insert(v);
+            modified++;
+            json.endObject();
         }
-
-        in.close();
-        out.close();
-
-        // Ouch..
-        String response = IOUtils.slurp(tmp);
-
-        if (response.length() > "[]".length()) {
-
-            JSONArray entries = new JSONArray(response);
-            modified = entries.length();
-
-            for (int i = 0; i < entries.length(); i++) {
-
-                JSONObject obj = entries.getJSONObject(i).getJSONObject("fields");
-                String dateString = obj.getString("date").split("\\.")[0];
-                obj.put("date", dateString);
-                db.insert(VictimsRecord.fromJSON(obj));
-            }
-        }
+        json.endArray();
 
         return modified;
     }
