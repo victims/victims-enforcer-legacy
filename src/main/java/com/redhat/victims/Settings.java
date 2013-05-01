@@ -67,7 +67,7 @@ public final class Settings {
 
     static {
         Map<String, String> mappings = new HashMap<String, String>();
-        mappings.put(URL, "https://victims-websec.rhcloud.com/service/v1");
+        mappings.put(URL, "https://victims-websec.rhcloud.com/service/v2");
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
         mappings.put(DATABASE_URL, "jdbc:derby:.victims;create=true");
@@ -114,11 +114,11 @@ public final class Settings {
                     }
 
                     if (!url.getPath().endsWith("service/v2")) {
-                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString() + "A"));
+                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
                     }
 
                 } catch (URIException e) {
-                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL) + "B"));
+                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
                 }
             }
         }),
