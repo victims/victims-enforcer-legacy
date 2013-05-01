@@ -67,7 +67,8 @@ public class Database {
         try {
             //final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
             Class.forName(driver).newInstance();
-
+            // Create database tables in the constructor so we don't need to worry about the caller doing so
+            this.createTables();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

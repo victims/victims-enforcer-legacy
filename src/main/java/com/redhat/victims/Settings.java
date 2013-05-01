@@ -113,12 +113,12 @@ public final class Settings {
                         url = new HttpsURL(entry);
                     }
 
-                    if (!url.getPath().endsWith("service/v1")) {
-                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
+                    if (!url.getPath().endsWith("service/v2")) {
+                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString() + "A"));
                     }
 
                 } catch (URIException e) {
-                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
+                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL) + "B"));
                 }
             }
         }),
