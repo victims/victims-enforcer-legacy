@@ -6,12 +6,12 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.victims</groupId>
-  <artifactId>enforce-victims-rule</artifactId>
+  <artifactId>victims-enforcer</artifactId>
   <version>1.1</version>
   <packaging>jar</packaging>
-  <name>enforce-victims-rule</name>
+  <name>victims-enforcer</name>
   <description>Checks a Maven projects dependencies against a database of known vulnerable artifacts.</description>
-  <url>http://gcmurphy.github.com/enforce-victims-plugin</url>
+  <url>http://victims-websec.rhcloud.com</url>
   <licenses>
     <license>
         <name>GNU General Public License, Version 3</name>
@@ -93,10 +93,10 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:git:git@github.com:gcmurphy/enforce-victims-rule.git</connection>
-    <url>scm:git:git@github.com:gcmurphy/enforce-victims-rule.git</url>
-    <developerConnection>scm:git:git@github.com:gcmurphy/enforce-victims-rule.git</developerConnection>
-    <tag>enforce-victims-rule-1.1</tag>
+    <connection>scm:git:git@github.com:victims/victims-enforcer.git</connection>
+    <url>scm:git:git@github.com:victims/victims-enforcer.git</url>
+    <developerConnection>scm:git:git@github.com:victims/victims-enforcer.git</developerConnection>
+    <tag>victims-enforcer-1.1</tag>
   </scm>
   <build>
     <plugins>
