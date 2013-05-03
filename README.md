@@ -2,14 +2,11 @@
 
 ## About
 
-This rule provides the logic to scan a Maven's project's dependencies against 
-a database of artifacts with publicly known Common Vulnerabilities and Exposures
-(CVE). The canonical version of the database is hosted at https://victims-websec.rhcloud.com
-and is maintained by Red Hat's Security Response Team (SRT). 
+This rule provides the logic to scan a Maven's project's dependencies against a database of artifacts with publicly known Common Vulnerabilities and Exposures (CVE). The canonical version of the database is hosted at https://victims-websec.rhcloud.com and is maintained by Red Hat security teams. 
 
 ## Getting Started
 
-A sample project and configuration instructions are avaiable [here](http://people.redhat.com/~gmurphy/projects/victims.html)
+A sample project is provided in sample/
 
 ## Example pom.xml
 ```
@@ -25,7 +22,7 @@ A sample project and configuration instructions are avaiable [here](http://peopl
             <dependency>
               <groupId>com.redhat.victims</groupId>
               <artifactId>enforce-victims-rule</artifactId>
-              <version>1.0</version>
+              <version>1.1</version>
               <type>jar</type>
             </dependency>
           </dependencies>
@@ -39,7 +36,7 @@ A sample project and configuration instructions are avaiable [here](http://peopl
                   <rules>
                     <rule implementation="com.redhat.victims.VictimsRule">     
                       <!-- The URL where the rule should synchronize the database with --> 
-                      <url>https://victims-websec.rhcloud.com/service/v1</url>
+                      <url>https://victims-websec.rhcloud.com/service/v2</url>
                             
                       <!-- 
                         Check the project's dependencies against the database using 
@@ -65,9 +62,6 @@ A sample project and configuration instructions are avaiable [here](http://peopl
                       -->
                       <fingerprint>fatal</fingerprint>
                             
-                      <!-- The location to save the embedded Apache Derby instance --> 
-                      <path>.victims</path>
-
                       <!-- 
                         Disables the synchronization mechansim. By default the rule will 
                         attempt to update the database for each build. 
@@ -91,3 +85,57 @@ A sample project and configuration instructions are avaiable [here](http://peopl
     ...
   </project>
 ```
+
+## Configuration options reference
+
+The following options can be specified as child elements of ```<rule implementation="com.redhat.victims.VictimsRule">```
+
+### url
+
+   The URL of the victims web service to used to synchronize the local database.
+
+   default: "https://victims-websec.rhcloud.com/service/v2"
+
+### metadata
+
+   The severity of exception to be thrown when a dependency is encountered that matches the known vulnerable database based on metadata. Fatal indicates the build should fail, warning indicates a warning should be issued but the build should proceed.
+
+   allowed : warning, fatal, disabled
+   default : warning
+
+
+### fingerprint
+
+   The severity of exception to be thrown when a dependency is encountered that matches the known vulnerable database based on a fingerprint. Fatal indicates the build should fail, warning indicates a warning should be issued but the build should proceed.
+
+   allowed : warning, fatal, disabled
+   default : fatal
+
+
+### updates
+
+    Allows the configuration of the synchronization mechanism. In automatic mode new entries in the victims database are pulled from the victims-web instance during each build. The synchronization mechanism may be disabled and processed manually for closed build environments.
+
+    allowed : auto, offline
+    default : auto
+
+
+### dbdriver
+
+    The jdbc driver to use for the local victims database. By default victims uses an embedded H2 database.
+
+    default :  org.h2.Driver
+
+### dburl
+
+    The jdbc connection URL to for the local victims database.
+
+    default : jdbc:h2:.victims
+
+### metadataplus
+
+    By default, victims-enforcer will compare the GAV information extracted from each dependency against that
+ within the victims database. If the metadataplus option is enabled, this feature will be extended so metadata within the MANIFEST.MF and pom.properties files is also examined for matches.
+
+    allowed : true, false
+    default : false
