@@ -59,7 +59,7 @@ public final class ArtifactLocator {
             return get.getResponseBodyAsStream();
 
         } catch (IOException e) {
-            throw new VictimsException(IOUtils.fmt(Resources.ERR_ARTIFACT_NOT_FOUND, a.getArtifactId()), e);
+            throw new VictimsException(TextUI.fmt(Resources.ERR_ARTIFACT_NOT_FOUND, a.getArtifactId()), e);
         }
 
     }
@@ -82,7 +82,7 @@ public final class ArtifactLocator {
             return new FileInputStream(dep);
 
         } catch (FileNotFoundException e) {
-            throw new VictimsException(IOUtils.fmt(Resources.ERR_ARTIFACT_NOT_FOUND, a.getArtifactId()), e);
+            throw new VictimsException(TextUI.fmt(Resources.ERR_ARTIFACT_NOT_FOUND, a.getArtifactId()), e);
         }
     }
 
@@ -104,6 +104,6 @@ public final class ArtifactLocator {
         }
 
     }
-  
-    
+
+
 }

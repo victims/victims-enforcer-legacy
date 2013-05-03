@@ -164,23 +164,23 @@ public class Synchronizer {
             if (newestEntry == null)
                 newestEntry = new Date(0); // All entries.
 
-            log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
-            log.info(IOUtils.fmt(Resources.INFO_PERFORMING_SYNC));
+            log.info(TextUI.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
+            log.info(TextUI.fmt(Resources.INFO_PERFORMING_SYNC));
 
             changes = sync(db, getUpdateURL(newestEntry));
-            log.info(String.format(IOUtils.fmt(Resources.INFO_ITEMS_ADDED, changes)));
+            log.info(String.format(TextUI.fmt(Resources.INFO_ITEMS_ADDED, changes)));
 
             changes = sync(db, getObseleteURL(newestEntry));
-            log.info(String.format(IOUtils.fmt(Resources.INFO_ITEMS_REMOVED, changes)));
+            log.info(String.format(TextUI.fmt(Resources.INFO_ITEMS_REMOVED, changes)));
 
             newestEntry = db.lastUpdated();
             if (newestEntry != null)
-                log.info(IOUtils.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
+                log.info(TextUI.fmt(Resources.INFO_DATABASE_LAST_UPDATE, newestEntry.toString()));
 
 
         } catch(Exception e){
             e.printStackTrace();
-            throw new VictimsException(IOUtils.fmt(Resources.ERR_SYNCHRONIZATION_FAILURE), e);
+            throw new VictimsException(TextUI.fmt(Resources.ERR_SYNCHRONIZATION_FAILURE), e);
 
 //        } finally {
 //            try { db.disconnect(); } catch(SQLException e){};

@@ -39,7 +39,7 @@ public class DatabaseTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        final String content = IOUtils.slurp(new File("testdata", "test.json"));
+        final String content = TextUI.slurp(new File("testdata", "test.json"));
         json = new JSONArray(content);
 
         db = new Database(Settings.defaults.get(Settings.DATABASE_DRIVER),

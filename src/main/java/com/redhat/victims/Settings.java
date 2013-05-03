@@ -104,7 +104,7 @@ public final class Settings {
 
                     final String entry = settings.get(URL);
                     if (entry == null || entry.length() <= 0) {
-                        throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, URL));
+                        throw new VictimsException(TextUI.fmt(Resources.ERR_SETTING_MISSING, URL));
                     }
 
                     URI url;
@@ -116,11 +116,11 @@ public final class Settings {
                     }
 
                     if (!url.getPath().endsWith("service/v2")) {
-                        throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, url.toString()));
+                        throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, url.toString()));
                     }
 
                 } catch (URIException e) {
-                    throw new VictimsException(IOUtils.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
+                    throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
                 }
             }
         }),
@@ -140,11 +140,11 @@ public final class Settings {
                 for (String item : modeSettings) {
                     String value = settings.get(item);
                     if (value == null) {
-                        throw new VictimsException(IOUtils.fmt(Resources.ERR_SETTING_MISSING, item));
+                        throw new VictimsException(TextUI.fmt(Resources.ERR_SETTING_MISSING, item));
                     }
 
                     if (!modes.contains(value)) {
-                        String err = IOUtils.fmt(Resources.ERR_INVALID_MODE, value, item, modes.toString());
+                        String err = TextUI.fmt(Resources.ERR_INVALID_MODE, value, item, modes.toString());
                         throw new VictimsException(err);
                     }
                 }
@@ -183,7 +183,7 @@ public final class Settings {
      */
     public void show(Log log) {
         JSONObject obj = new JSONObject(settings);
-        log.info(IOUtils.prettyPrint(IOUtils.fmt(Resources.INFO_SETTINGS_HEADING), obj));
+        log.info(TextUI.prettyPrint(TextUI.fmt(Resources.INFO_SETTINGS_HEADING), obj));
     }
 
     /**

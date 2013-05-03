@@ -106,7 +106,7 @@ public class VictimsRule implements EnforcerRule {
                     c.execute(ctx);
                 }
             }
-            log.info(IOUtils.fmt(Resources.INFO_NO_VULNERABILTIES_FOUND));
+            log.info(TextUI.fmt(Resources.INFO_NO_VULNERABILTIES_FOUND));
 
         } catch (ExpressionEvaluationException e) {
             log.error(e.toString());

@@ -67,7 +67,19 @@ public class Resources extends ListResourceBundle  {
      * Information shown that links meta data in an pom.properties file
      * to an entry in the database
      */
-    public static final String INFO_METADATA_BODY_MANIFEST       = "INFO_METADATA_BODY_MANIFEST";
+    public static final String INFO_METADATA_BODY_MANIFEST      = "INFO_METADATA_BODY_MANIFEST";
+
+    /**
+     * A name and version have been recorded in the main victims record that
+     * is similar to that of the artifact.
+     */
+    public static final String INFO_METADATA_BODY_NAME_VERSION  = "INFO_METADATA_BODY_NAME_VERSION";
+
+    /**
+     * The GAV information obtained from the artifact is similar to that within
+     * a record in the victims database.
+     */
+    public static final String INFO_METADATA_BODY_GAV = "INFO_METADATA_BODY_GAV";
 
     /**
      * Heading shown when a metadata match is found and rule
@@ -187,6 +199,10 @@ public class Resources extends ListResourceBundle  {
 
             { INFO_METADATA_BODY_MANIFEST,  " * %s contains a MANIFEST.MF file with entries Implementation-Vendor %s, "
                     + "Implementation-Title, and Implementation-Version %s. These match a record in the victims database.  " },
+
+             { INFO_METADATA_BODY_NAME_VERSION,  " * %s has an name and version similar to a record within the victims database. "},
+             { INFO_METADATA_BODY_GAV,  " * %s has an groupId, artifactId, and version similar to a record within the victims database. "},
+
 
 
 

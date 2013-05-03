@@ -138,6 +138,9 @@ public class Query {
     public static final String FIND_BY_PROPERTY =
             "SELECT vicitms_id FROM metadata WHERE property = ? AND value LIKE ?";
 
+    public static final String FIND_BY_NAME_AND_VERSION =
+            "SELECT id FROM victims WHERE name like ? and version = ?";
+
     public static final String FIND_BY_CLASSNAME =
             "SELECT victims_id FROM fingerprints WHERE filename = ?";
 

@@ -41,7 +41,7 @@ import org.json.JSONArray;
  *
  * @author gmurphy
  */
-public final class IOUtils {
+public final class TextUI {
 
    /**
     * Repeats a character n times.

@@ -29,6 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -68,21 +69,21 @@ public final class FingerprintCommand implements Command {
     }
 
 
-    public String computeHash(String algorithm, InputStream is) {
+    public String computeHash(String algorithm, byte[] bytes) {
 
         String h = "";
         try {
-            byte[] buf = new byte[1024];
+            //byte[] buf = new byte[1024];
 
             MessageDigest md = MessageDigest.getInstance(algorithm);
-            while (is.read(buf) > 0)
-                md.update(buf);
+//            while (is.read(buf) > 0)
+                md.update(bytes);
 
             h = new String(Hex.encodeHex(md.digest()));
 
 
         } catch (NoSuchAlgorithmException e){
-        } catch (IOException e){
+        //} catch (IOException e){
         }
 
         return h;
@@ -104,7 +105,12 @@ public final class FingerprintCommand implements Command {
         try {
 
             File f = ctx.getArtifact().getFile();
-            String fileHash = computeHash(FILE_HASH_ALGORITHM, new FileInputStream(f));
+            RandomAccessFile raf = new RandomAccessFile(f.getCanonicalPath(), "r");
+            byte data[] = new byte[(int)f.length()];
+            raf.read(data);
+
+
+            String fileHash = computeHash(FILE_HASH_ALGORITHM, data);
             VictimsRecord rec = ctx.getDatabase().findByJarHash(fileHash);
             failOnError(ctx, rec, fileHash);
 
@@ -132,7 +138,7 @@ public final class FingerprintCommand implements Command {
 
                 // Check the combined hash
                 final String combined = new String(Hex.encodeHex(md.digest()));
-                final VictimsRecord record = ctx.getDatabase().findByJarHash(combined);
+                final VictimsRecord record = ctx.getDatabase().findByCombinedHash(combined);
                 failOnError(ctx, record, combined);
 
                 String[] hashes = jarContent.toArray(new String[jarContent.size()]);
@@ -159,7 +165,7 @@ public final class FingerprintCommand implements Command {
 
     private void failOnError(final ExecutionContext ctx, VictimsRecord r, String h) throws EnforcerRuleException {
 
-        final String fmt = IOUtils.fmt(Resources.INFO_FINGERPRINT_HEADING);
+        final String fmt = TextUI.fmt(Resources.INFO_FINGERPRINT_HEADING);
         final String execMode = ctx.getSettings().get(Settings.FINGERPRINT);
         final String artifactId = ctx.getArtifact().getArtifactId();
         try {
@@ -173,8 +179,8 @@ public final class FingerprintCommand implements Command {
                 obj.put("hash", h);
 
                 // Notify of the error
-                String info = IOUtils.prettyPrint(fmt, obj);
-                IOUtils.report(ctx.getLog(), execMode, info);
+                String info = TextUI.prettyPrint(fmt, obj);
+                TextUI.report(ctx.getLog(), execMode, info);
 
                 if (ctx.getSettings().inFatalMode(Settings.FINGERPRINT)) {
                     fatalError(artifactId, filename);
@@ -188,8 +194,8 @@ public final class FingerprintCommand implements Command {
     private void fatalError(final String artifactId, final String filename) throws EnforcerRuleException {
 
         StringBuilder err = new StringBuilder();
-        err.append(IOUtils.box(IOUtils.fmt(Resources.FATAL_FINGERPRINT_HEADING)));
-        err.append(IOUtils.wrap(80, IOUtils.fmt(Resources.FATAL_FINGERPRINT_BODY, filename, artifactId)));
+        err.append(TextUI.box(TextUI.fmt(Resources.FATAL_FINGERPRINT_HEADING)));
+        err.append(TextUI.wrap(80, TextUI.fmt(Resources.FATAL_FINGERPRINT_BODY, filename, artifactId)));
 
         throw new EnforcerRuleException(err.toString());
 

@@ -79,8 +79,8 @@ public class SynchronizerTest extends TestCase {
                 public void handle(HttpExchange exchange) {
 
                     try {
-                       
-                        final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
+
+                        final byte[] json = TextUI.slurp(new File("testdata", "test.json")).getBytes();
                         exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
                         exchange.getResponseBody().write(json);
                     } catch (Exception e) {

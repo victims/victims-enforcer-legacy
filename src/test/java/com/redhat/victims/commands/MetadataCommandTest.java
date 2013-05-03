@@ -18,7 +18,7 @@
  */
 package com.redhat.victims.commands;
 
-import com.redhat.victims.IOUtils;
+import com.redhat.victims.TextUI;
 import com.redhat.victims.Settings;
 import com.redhat.victims.Synchronizer;
 import com.redhat.victims.db.Database;
@@ -72,7 +72,7 @@ public class MetadataCommandTest extends TestCase {
             public void handle(HttpExchange exchange) {
 
                 try {
-                    final byte[] json = IOUtils.slurp(new File("testdata", "test.json")).getBytes();
+                    final byte[] json = TextUI.slurp(new File("testdata", "test.json")).getBytes();
                     exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
                     exchange.getResponseBody().write(json);
                 } catch (Exception e) {

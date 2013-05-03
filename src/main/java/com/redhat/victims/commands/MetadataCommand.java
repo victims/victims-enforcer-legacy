@@ -18,7 +18,7 @@
  */
 package com.redhat.victims.commands;
 
-import com.redhat.victims.IOUtils;
+import com.redhat.victims.TextUI;
 import com.redhat.victims.Resources;
 import com.redhat.victims.Settings;
 import com.redhat.victims.archive.java.Jar;
@@ -65,13 +65,25 @@ public final class MetadataCommand implements Command {
 
              if (record != null) {
 
-                 IOUtils.report(ctx.getLog(), mode,
-                         IOUtils.fmt(Resources.INFO_METADATA_BODY_POM,
+                 TextUI.report(ctx.getLog(), mode,
+                         TextUI.fmt(Resources.INFO_METADATA_BODY_GAV,
                          filename, artifactId, groupId, version));
 
                  if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
                      fatalError(artifactId);
                  }
+             }
+
+             record = ctx.getDatabase().findByNameAndVersion(artifactId, version);
+             if (record != null){
+                  TextUI.report(ctx.getLog(), mode,
+                         TextUI.fmt(Resources.INFO_METADATA_BODY_NAME_VERSION,
+                         filename, artifactId, groupId, version));
+
+                 if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
+                     fatalError(artifactId);
+                 }
+
              }
 
              if (ctx.getSettings().extendedMetadataEnabled()){
@@ -115,8 +127,8 @@ public final class MetadataCommand implements Command {
 
                     if (record != null) {
 
-                        IOUtils.report(ctx.getLog(), mode,
-                                IOUtils.fmt(Resources.INFO_METADATA_BODY_POM,
+                        TextUI.report(ctx.getLog(), mode,
+                                TextUI.fmt(Resources.INFO_METADATA_BODY_POM,
                                 filename, artifactId, groupId, version));
 
                         if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
@@ -133,8 +145,8 @@ public final class MetadataCommand implements Command {
                     record = ctx.getDatabase().findByImplementation(vendor, title, version);
                     if (record != null) {
 
-                        IOUtils.report(ctx.getLog(), mode,
-                                IOUtils.fmt(Resources.INFO_METADATA_BODY_MANIFEST,
+                        TextUI.report(ctx.getLog(), mode,
+                                TextUI.fmt(Resources.INFO_METADATA_BODY_MANIFEST,
                                 filename, vendor, title, version));
 
                         if (ctx.getSettings().inFatalMode(Settings.METADATA)) {
@@ -162,8 +174,8 @@ public final class MetadataCommand implements Command {
     private void fatalError(String artifactId) throws EnforcerRuleException {
 
         StringBuilder err = new StringBuilder();
-        err.append(IOUtils.box(IOUtils.fmt(Resources.FATAL_METADATA_HEADING)));
-        err.append(IOUtils.wrap(80, IOUtils.fmt(Resources.FATAL_METADATA_BODY, artifactId)));
+        err.append(TextUI.box(TextUI.fmt(Resources.FATAL_METADATA_HEADING)));
+        err.append(TextUI.wrap(80, TextUI.fmt(Resources.FATAL_METADATA_BODY, artifactId)));
         throw new EnforcerRuleException(err.toString());
 
     }

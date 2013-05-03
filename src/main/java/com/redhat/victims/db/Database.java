@@ -18,7 +18,7 @@
  */
 package com.redhat.victims.db;
 
-import com.redhat.victims.IOUtils;
+import com.redhat.victims.TextUI;
 import com.redhat.victims.Resources;
 import com.redhat.victims.VictimsException;
 import java.io.File;
@@ -429,7 +429,7 @@ public class Database {
 
     public void runSqlScript(File script) throws SQLException, IOException {
 
-        String sql = IOUtils.slurp(script);
+        String sql = TextUI.slurp(script);
         for (String q : sql.split(";")) {
             handle().createStatement().execute(q);
         }
@@ -483,6 +483,30 @@ public class Database {
         return record;
     }
 
+    public VictimsRecord findByNameAndVersion(String name, String version) throws SQLException {
+
+        ResultSet rs;
+        VictimsRecord record = null;
+        PreparedStatement stmt = null;
+        try {
+            stmt = handle().prepareStatement(Query.FIND_BY_NAME_AND_VERSION);
+            stmt.setString(1, name);
+            stmt.setString(2, version);
+
+            rs = stmt.executeQuery();
+            if (rs.next()){
+                 record = get(rs.getInt(1));
+            }
+
+        } finally {
+            if (stmt != null)
+                stmt.close();
+
+        }
+
+        return record;
+    }
+
     public VictimsRecord findByJarHash(String hash) throws SQLException {
 
         ResultSet rs;
@@ -493,8 +517,9 @@ public class Database {
             stmt.setString(1, hash);
 
             rs = stmt.executeQuery();
-            if (rs.next())
-                record = get(rs.getInt(1));
+            if (rs.next()){
+                 record = get(rs.getInt(1));
+            }
 
         } finally {
             if (stmt != null)
