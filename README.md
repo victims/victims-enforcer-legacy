@@ -100,7 +100,7 @@ The following options can be specified as child elements of ```<rule implementat
 
    The severity of exception to be thrown when a dependency is encountered that matches the known vulnerable database based on metadata. Fatal indicates the build should fail, warning indicates a warning should be issued but the build should proceed.
 
-   allowed : warning, fatal, disabled
+   allowed : warning, fatal, disabled  
    default : warning
 
 
@@ -108,34 +108,34 @@ The following options can be specified as child elements of ```<rule implementat
 
    The severity of exception to be thrown when a dependency is encountered that matches the known vulnerable database based on a fingerprint. Fatal indicates the build should fail, warning indicates a warning should be issued but the build should proceed.
 
-   allowed : warning, fatal, disabled
+   allowed : warning, fatal, disabled  
    default : fatal
 
 
 ### updates
 
-    Allows the configuration of the synchronization mechanism. In automatic mode new entries in the victims database are pulled from the victims-web instance during each build. The synchronization mechanism may be disabled and processed manually for closed build environments.
+   Allows the configuration of the synchronization mechanism. In automatic mode new entries in the victims database are pulled from the victims-web instance during each build. The synchronization mechanism may be disabled and processed manually for closed build environments.
 
-    allowed : auto, offline
-    default : auto
+   allowed : auto, offline  
+   default : auto
 
 
 ### dbdriver
 
-    The jdbc driver to use for the local victims database. By default victims uses an embedded H2 database.
+   The jdbc driver to use for the local victims database. By default victims uses an embedded H2 database.
 
-    default :  org.h2.Driver
+   default :  org.h2.Driver
 
 ### dburl
 
-    The jdbc connection URL to for the local victims database.
+   The jdbc connection URL to for the local victims database.
 
-    default : jdbc:h2:.victims
+   default : jdbc:h2:.victims
 
 ### metadataplus
 
-    By default, victims-enforcer will compare the GAV information extracted from each dependency against that
+   By default, victims-enforcer will compare the GAV information extracted from each dependency against that
  within the victims database. If the metadataplus option is enabled, this feature will be extended so metadata within the MANIFEST.MF and pom.properties files is also examined for matches.
 
-    allowed : true, false
-    default : false
+   allowed : true, false  
+   default : false
