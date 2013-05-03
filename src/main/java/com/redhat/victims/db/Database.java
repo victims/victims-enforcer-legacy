@@ -23,6 +23,7 @@ import com.redhat.victims.Resources;
 import com.redhat.victims.VictimsException;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -30,6 +31,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,8 +69,8 @@ public class Database {
         try {
             //final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
             Class.forName(driver).newInstance();
-            // Create database tables in the constructor so we don't need to worry about the caller doing so
-            this.createTables();
+            createTables();
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -379,18 +381,29 @@ public class Database {
          return metadata.getTables(null, null, name, null).next();
     }
 
-    public void createTables() throws SQLException {
+    public final void createTables() throws SQLException {
+
+        String victims = Query.CREATE_VICTIMS_TABLE_DERBY;
+        String fingerprints = Query.CREATE_FINGERPRINT_TABLE_DERBY;
+        String metadata = Query.CREATE_METADATA_TABLE_DERBY;
+
+        if (url.contains("h2")){
+            victims = Query.CREATE_VICTIMS_TABLE_H2;
+            fingerprints = Query.CREATE_FINGERPRINT_TABLE_H2;
+            metadata = Query.CREATE_METADATA_TABLE_H2;
+        }
+
 
         if (!tableExists("VICTIMS")) {
-            handle().createStatement().execute(Query.CREATE_VICTIMS_TABLE);
+            handle().createStatement().execute(victims);
         }
 
         if (!tableExists("FINGERPRINTS")) {
-            handle().createStatement().execute(Query.CREATE_FINGERPRINT_TABLE);
+            handle().createStatement().execute(fingerprints);
         }
 
         if (!tableExists("METADATA")) {
-            handle().createStatement().execute(Query.CREATE_METADATA_TABLE);
+            handle().createStatement().execute(metadata);
         }
 
     }
@@ -447,7 +460,7 @@ public class Database {
         return record;
     }
 
-    public VictimsRecord findByJarHash(String combined) throws SQLException {
+    public VictimsRecord findByCombinedHash(String combined) throws SQLException {
 
         ResultSet rs;
         VictimsRecord record = null;
@@ -469,6 +482,66 @@ public class Database {
         return record;
     }
 
+    public VictimsRecord findByJarHash(String hash) throws SQLException {
+
+        ResultSet rs;
+        VictimsRecord record = null;
+        PreparedStatement stmt = null;
+        try {
+            stmt = handle().prepareStatement(Query.FIND_BY_JAR_HASH);
+            stmt.setString(1, hash);
+
+            rs = stmt.executeQuery();
+            if (rs.next())
+                record = get(rs.getInt(1));
+
+        } finally {
+            if (stmt != null)
+                stmt.close();
+
+        }
+
+        return record;
+    }
+
+    /**
+     * Apache Derby and h2 do not support setArray with type of String. Unfortunately
+     * this means we have to build the query string up dynamically.
+     */
+    private PreparedStatement setArrayNotSupported(String[] hashes, String algorithm) throws SQLException {
+
+
+        int i;
+        PreparedStatement stmt;
+        final String whitelist = "[A-Za-z0-9]+";
+        StringBuilder fields = new StringBuilder();
+        fields.append("hash in (");
+        for (i = 0; i < hashes.length; i++){
+            if (hashes.length - 1 == i){
+                fields.append("?");
+            } else {
+                fields.append("?,");
+            }
+        }
+        fields.append(")");
+
+        String q = Query.FIND_VULNERABLE_BY_HASHES;
+        q = q.replace("hash in ?", fields.toString());
+
+        stmt = handle().prepareStatement(q);
+
+        int param = 1;
+        stmt.setString(param++,  algorithm);
+        for (i = 0; i < hashes.length; i++){
+            if (! hashes[i].matches(whitelist)){
+                throw new SQLException("Tainted input data: " + hashes[i]);
+            }
+            stmt.setString(param++, hashes[i]);
+        }
+        stmt.setString(param++, algorithm);
+        return stmt;
+    }
+
     /**
      * Extracts all victims records from the database that contain the list
      * of class hashes within a certain tolerance.
@@ -478,54 +551,35 @@ public class Database {
      * @return
      * @throws SQLException
      */
-     public VictimsRecord[] findByClassSet(String[] hashes, double tolerance) throws SQLException {
+     public VictimsRecord findByClassSet(String[] hashes, String algorithm) throws SQLException {
 
-        int i;
-        final String whitelist = "[A-Za-z0-9]+";
-        List<VictimsRecord> matches = new ArrayList<VictimsRecord>();
-        long hits = Math.round(tolerance * hashes.length);
+         PreparedStatement stmt = null;
+         ResultSet rs;
+         try {
 
-        StringBuilder fields = new StringBuilder();
-        for (i = 0; i < hashes.length; i++){
-            if (hashes.length - 1 == i){
-                fields.append("?");
-            } else {
-                fields.append("?,");
-            }
-        }
+            Array hashArray = handle().createArrayOf("VARCHAR", hashes);
+            stmt = handle().prepareStatement(Query.FIND_VULNERABLE_BY_HASHES);
+            stmt.setString(1, algorithm);
+            stmt.setArray(2, hashArray);
+            stmt.setString(3, algorithm);
 
-        // FIXME:
-        //  Dynamic building of SQL string is generally a bad thing.
-        //  I've tried to limit impact by still using '?' for each
-        //  field used and am checking for tainted input. However
-        //  ultimately I would like to do a more intelligent SQL
-        //  query here.
-        final String victimsQuery = "select victims_id from ("
-                + "select * from fingerprints where hash in ("
-                + fields.toString()
-                + ")) properties group by victims_id";//having count(victims_id) = ?";
-
-
-        ResultSet rs = null;
-        PreparedStatement stmt = null;
-        try {
-
-            //stmt = handle().prepareStatement(q.toString());
-            stmt = handle().prepareStatement(victimsQuery);
-            for (i = 0; i < hashes.length; i++){
-
-                if (! hashes[i].matches(whitelist)){
-                    throw new SQLException("Tainted input data: " + hashes[i]);
-                }
-                stmt.setString(i + 1, hashes[i]);
-            }
-            //stmt.setLong(i + 1, hits);
             rs = stmt.executeQuery();
 
+            if (rs.next()){
+                int id = rs.getInt(1);
+                return get(id);
 
+            }
+
+        // ffs h2 better be fast..how about throwing the standard exceptions...
+        //} catch (SQLFeatureNotSupportedException | org.h2.jdbc.JdbcSQLException e){
+        } catch (Exception e){ // for 1.5 support 
+
+            stmt = setArrayNotSupported(hashes, algorithm);
+            rs = stmt.executeQuery();
 
             while (rs.next()){
-                matches.add(get(rs.getInt(1)));
+                return get(rs.getInt(1));
             }
 
         } finally {
@@ -533,7 +587,7 @@ public class Database {
                 stmt.close();
         }
 
-        return matches.toArray(new VictimsRecord[matches.size()]);
+        return null;
 
     }
 

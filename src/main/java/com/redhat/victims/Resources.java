@@ -172,7 +172,7 @@ public class Resources extends ListResourceBundle  {
                                             + "the reported vulnerabilities. The affected artifact ID is '%s'." },
 
             { INFO_FINGERPRINT_HEADING,     "Artifact matches a record in the vulnerability database"                     },
-            { INFO_CLASSMATCH_HEADING,      "Artifact contains %s%% of the classes in a record in the vulnerability database" },
+//            { INFO_CLASSMATCH_HEADING,      "Artifact contains %s%% of the classes in a record in the vulnerability database" },
 
 
             { FATAL_METADATA_HEADING,       "Detected potentially vulnerable artifact"                          },

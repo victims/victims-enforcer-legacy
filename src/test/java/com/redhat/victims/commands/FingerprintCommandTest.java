@@ -116,7 +116,7 @@ public class FingerprintCommandTest extends TestCase {
             config.set(Settings.METADATA, Settings.MODE_WARNING);
             config.set(Settings.URL, "http://www.dummy.com/service/v2");
             config.set(Settings.UPDATE_DATABASE, "auto");
-            config.set(Settings.TOLERANCE, "0.75");
+            //config.set(Settings.TOLERANCE, "0.75");
             config.validate();
 
 

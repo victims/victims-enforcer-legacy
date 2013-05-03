@@ -89,19 +89,19 @@ public class JarMetadata implements ArchiveVisitor {
 
         JSONObject properties = new JSONObject();
         Manifest mf = new Manifest(manifest);
-        final String[] attribs = {
-            Attributes.Name.MANIFEST_VERSION.toString(),
-            Attributes.Name.IMPLEMENTATION_TITLE.toString(),
-            Attributes.Name.IMPLEMENTATION_URL.toString(),
-            Attributes.Name.IMPLEMENTATION_VENDOR.toString(),
-            Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(),
-            Attributes.Name.IMPLEMENTATION_VERSION.toString(),
-            Attributes.Name.MAIN_CLASS.toString()
+        final Attributes.Name[] attribs = {
+            Attributes.Name.MANIFEST_VERSION,
+            Attributes.Name.IMPLEMENTATION_TITLE,
+            Attributes.Name.IMPLEMENTATION_URL,
+            Attributes.Name.IMPLEMENTATION_VENDOR,
+            Attributes.Name.IMPLEMENTATION_VENDOR_ID,
+            Attributes.Name.IMPLEMENTATION_VERSION,
+            Attributes.Name.MAIN_CLASS
         };
 
-        for (String attrib : attribs){
-            Object o = mf.getEntries().get(attrib);
-            properties.put(attrib, (o == null) ? "" : o.toString() );
+        for (Attributes.Name attrib : attribs){
+            Object o = mf.getMainAttributes().get(attrib);
+            properties.put(attrib.toString(), (o == null) ? "" : o.toString() );
         }
 
         return properties;
@@ -123,7 +123,7 @@ public class JarMetadata implements ArchiveVisitor {
                 metadata.put(obj);
             } else if (name.endsWith("MANIFEST.MF")) {
 
-                try { 
+                try {
 
                     if (obj == null)
                         throw new JSONException("Doesn't exist");

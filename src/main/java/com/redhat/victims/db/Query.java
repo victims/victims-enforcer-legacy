@@ -28,7 +28,7 @@ public class Query {
      * TODO: Move database table creation logic to external source. The
      * autoincrement element of these tables is not likely to be portable.
      */
-     public static final String CREATE_VICTIMS_TABLE =
+     public static final String CREATE_VICTIMS_TABLE_DERBY =
             "CREATE TABLE victims ("
                 + "id          INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
                 + "cves        VARCHAR(255)    NOT NULL,"
@@ -38,9 +38,24 @@ public class Query {
                 + "version     VARCHAR(255)    NOT NULL,"
                 + "submitter   VARCHAR(255)    NOT NULL,"
                 + "format      VARCHAR(255)    NOT NULL,"
-                + "status      VARCHAR(255)    NOT NULL)";
+                + "status      VARCHAR(255)    NOT NULL,"
+                + "file_hash   VARCHAR(255))";
 
-    public static final String CREATE_FINGERPRINT_TABLE =
+
+    public static final String CREATE_VICTIMS_TABLE_H2 =
+            "CREATE TABLE victims ("
+                + "id          INTEGER         NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                + "cves        VARCHAR(255)    NOT NULL,"
+                + "vendor      VARCHAR(255)    NOT NULL,"
+                + "name        VARCHAR(255)    NOT NULL,"
+                + "created     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "version     VARCHAR(255)    NOT NULL,"
+                + "submitter   VARCHAR(255)    NOT NULL,"
+                + "format      VARCHAR(255)    NOT NULL,"
+                + "status      VARCHAR(255)    NOT NULL,"
+                + "file_hash   VARCHAR(255))";
+
+    public static final String CREATE_FINGERPRINT_TABLE_DERBY =
             "CREATE TABLE fingerprints ("
                 + "id          INTEGER        NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
                 + "victims_id  INTEGER         NOT NULL,"
@@ -50,7 +65,17 @@ public class Query {
                 + "hash        VARCHAR(255)    NOT NULL,"
                 + "FOREIGN KEY(victims_id) REFERENCES victims(id))";
 
-    public static final String CREATE_METADATA_TABLE =
+   public static final String CREATE_FINGERPRINT_TABLE_H2 =
+            "CREATE TABLE fingerprints ("
+                + "id          INTEGER        NOT NULL PRIMARY KEY AUTO_INCREMENT, "
+                + "victims_id  INTEGER         NOT NULL,"
+                + "algorithm   VARCHAR(255)    NOT NULL,"
+                + "combined    VARCHAR(255)    NOT NULL,"
+                + "filename    VARCHAR(255)    NOT NULL,"
+                + "hash        VARCHAR(255)    NOT NULL,"
+                + "FOREIGN KEY(victims_id) REFERENCES victims(id))";
+
+    public static final String CREATE_METADATA_TABLE_DERBY =
             "CREATE TABLE metadata ("
                 + "id           INTEGER         NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
                 + "source       VARCHAR(255)    NOT NULL, "
@@ -58,6 +83,16 @@ public class Query {
                 + "property     VARCHAR(255)    NOT NULL, "
                 + "value        VARCHAR(255)    NOT NULL, "
                 + "FOREIGN KEY(victims_id) REFERENCES VICTIMS(ID))";
+
+    public static final String CREATE_METADATA_TABLE_H2 =
+            "CREATE TABLE metadata ("
+                + "id           INTEGER         NOT NULL PRIMARY KEY AUTO_INCREMENT, "
+                + "source       VARCHAR(255)    NOT NULL, "
+                + "victims_id   INTEGER         NOT NULL, "
+                + "property     VARCHAR(255)    NOT NULL, "
+                + "value        VARCHAR(255)    NOT NULL, "
+                + "FOREIGN KEY(victims_id) REFERENCES VICTIMS(ID))";
+
 
     public static final String INSERT_VICTIMS =
             "INSERT INTO victims(cves, vendor, name, "
@@ -109,8 +144,11 @@ public class Query {
     public static final String FIND_BY_CLASS_HASH =
             "SELECT victims_id FROM fingerprints WHERE hash = ?";
 
-    public static final String FIND_BY_JAR_HASH =
+    public static final String FIND_BY_COMBINED_HASH =
             "SELECT DISTINCT victims_id FROM fingerprints WHERE combined = ?";
+
+    public static final String FIND_BY_JAR_HASH =
+            "SELECT id from victims where file_hash = ?";
 
     public static final String GET_METADATA_SOURCES =
             "SELECT DISTINCT source FROM metadata WHERE victims_id = ?";
@@ -130,6 +168,25 @@ public class Query {
     public static final String GET_VICTIM_BY_ID =
             "SELECT * FROM victims WHERE id = ?";
 
-    public static final String GET_LATEST =
-            "SELECT MAX(created) FROM VICTIMS";
+    public static final String GET_LATEST = "SELECT MAX(created) FROM VICTIMS";
+
+    public static final String FIND_VULNERABLE_BY_HASHES =
+            "select matched.id from"
+         +   "  ( select victims_id as id,"
+         +   "        count(*) as total"
+         +   "    from fingerprints"
+         +   "    where algorithm = ?"
+         +   "    and hash in ?"
+         +   "    group by victims_id"
+         +   "  ) as matched,"
+         +   "  ("
+         +   "    select"
+         +   "        victims_id as id,"
+         +   "        count(*) as total"
+         +   "    from fingerprints"
+         +   "    where algorithm = ?"
+         +   "    group by victims_id"
+         +   "  ) as vulnerable where vulnerable.total = matched.total"
+         +   "  and vulnerable.id = matched.id";
+
 }

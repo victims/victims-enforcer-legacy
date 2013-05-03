@@ -50,7 +50,7 @@ public class VictimsRule implements EnforcerRule {
     private String dbdriver     = Settings.defaults.get(Settings.DATABASE_DRIVER);
     private String dburl        = Settings.defaults.get(Settings.DATABASE_URL);
     private String updates      = Settings.defaults.get(Settings.UPDATE_DATABASE);
-    private String tolerance    = Settings.defaults.get(Settings.TOLERANCE);
+    //private String tolerance    = Settings.defaults.get(Settings.TOLERANCE);
 
     /*
      * Checks performed as a part of this rule
@@ -80,7 +80,7 @@ public class VictimsRule implements EnforcerRule {
             setup.set(Settings.UPDATE_DATABASE, updates);
             setup.set(Settings.DATABASE_DRIVER, dbdriver);
             setup.set(Settings.DATABASE_URL, dburl);
-            setup.set(Settings.TOLERANCE, tolerance);
+            //setup.set(Settings.TOLERANCE, tolerance);
             setup.validate();
             setup.show(log);
 
