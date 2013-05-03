@@ -41,7 +41,7 @@ public class VictimsRecord  {
     public String       format;
     public String       version;
     public String       submitter;
-    public String       fileHash;
+    public String       hash;
     public Map<String, HashRecord> hashes;
 
     public String[]  cves;

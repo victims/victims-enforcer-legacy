@@ -117,6 +117,7 @@ public class Database {
             stmt.setString(6, r.submitter);
             stmt.setString(7, r.format);
             stmt.setString(8, r.status.name());
+            stmt.setString(9, r.hash);
 
             stmt.executeUpdate();
 
@@ -573,7 +574,7 @@ public class Database {
 
         // ffs h2 better be fast..how about throwing the standard exceptions...
         //} catch (SQLFeatureNotSupportedException | org.h2.jdbc.JdbcSQLException e){
-        } catch (Exception e){ // for 1.5 support 
+        } catch (Exception e){ // for 1.5 support
 
             stmt = setArrayNotSupported(hashes, algorithm);
             rs = stmt.executeQuery();

@@ -138,7 +138,7 @@ public final class FingerprintCommand implements Command {
                 String[] hashes = jarContent.toArray(new String[jarContent.size()]);
                 String withAlgorithm = Algorithms.get(algorithm);
                 VictimsRecord firstMatch = ctx.getDatabase().findByClassSet(hashes, withAlgorithm);
-                failOnError(ctx, firstMatch, firstMatch != null ? firstMatch.fileHash : ""); // Report file hash?
+                failOnError(ctx, firstMatch, firstMatch != null ? firstMatch.hash : ""); // Report file hash?
 
             }
 

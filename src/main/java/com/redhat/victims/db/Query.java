@@ -96,8 +96,8 @@ public class Query {
 
     public static final String INSERT_VICTIMS =
             "INSERT INTO victims(cves, vendor, name, "
-                + "created, version, submitter, format, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                + "created, version, submitter, format, status, file_hash) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     public static final String INSERT_FINGERPRINT =
             "INSERT INTO fingerprints (victims_id, algorithm,"
