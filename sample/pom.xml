@@ -24,7 +24,7 @@
     <dependency>
       <groupId>com.redhat.victims</groupId>
       <artifactId>enforce-victims-rule</artifactId>
-      <version>1.0</version>
+      <version>1.1</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -54,7 +54,7 @@
           <dependency>
             <groupId>com.redhat.victims</groupId>
             <artifactId>enforce-victims-rule</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
           </dependency>
         </dependencies>
         <executions>
@@ -69,7 +69,7 @@
 
                   <!-- The URL where the rule should synchronize the
 database with -->
-                  <url>https://victims-websec.rhcloud.com/service/v1</url>
+                  <url>https://victims-websec.rhcloud.com/service/v2</url>
 
                   <!--
                     Check the project's dependencies against the
@@ -105,10 +105,6 @@ fail the build.
                   -->
                   <fingerprint>fatal</fingerprint>
 
-                  <!-- The location to save the embedded Apache Derby
-instance -->
-                  <path>.victims</path>
-
                   <!--
                     Disables the synchronization mechansim. By default
 the rule will
@@ -122,7 +118,6 @@ each build.
 
                   -->
                   <updates>auto</updates>
-
                 </rule>
               </rules>
             </configuration>
