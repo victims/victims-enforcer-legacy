@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.victims</groupId>
-  <artifactId>enforcer-victims-rule</artifactId>
+  <artifactId>victims-enforcer</artifactId>
   <version>1.1</version>
   <packaging>jar</packaging>
   <name>victims-enforcer</name>
@@ -96,7 +96,7 @@
     <connection>scm:git:git@github.com:victims/victims-enforcer.git</connection>
     <url>scm:git:git@github.com:victims/victims-enforcer.git</url>
     <developerConnection>scm:git:git@github.com:victims/victims-enforcer.git</developerConnection>
-    <tag>enforce-victims-rule-1.1</tag>
+    <tag>victims-enforcer-1.1</tag>
   </scm>
   <build>
     <plugins>
