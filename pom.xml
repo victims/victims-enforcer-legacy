@@ -95,7 +95,7 @@
   <scm>
     <connection>scm:git:git@github.com:victims/victims-enforcer.git</connection>
     <url>scm:git:git@github.com:victims/victims-enforcer.git</url>
-    <developerConnection>scm:git@github.com:victims/victims-enforcer.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:victims/victims-enforcer.git</developerConnection>
     <tag>victims-enforcer-1.1</tag>
   </scm>
   <build>
