@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.victims</groupId>
-  <artifactId>victims-enforcer</artifactId>
+  <artifactId>enforce-victims-rule</artifactId>
   <version>1.1</version>
   <packaging>jar</packaging>
   <name>victims-enforcer</name>
