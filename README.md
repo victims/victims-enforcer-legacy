@@ -8,6 +8,16 @@ This rule provides the logic to scan a Maven's project's dependencies against a 
 
 A sample project is provided in sample/
 
+To see the victims-enforcer in action run:
+```sh
+mvn clean package
+```
+
+On environments running JDK 1.7 or greater, you will have to disable _jsse.enableSNIExtension_ for synchronization to work.
+```sh
+mvn clean package -Djsse.enableSNIExtension=false
+```
+
 ## Example pom.xml
 ```
   <project>
