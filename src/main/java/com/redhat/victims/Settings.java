@@ -19,12 +19,14 @@
 package com.redhat.victims;
 
 import java.util.*;
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
+import java.util.Map.Entry;
+
+//import org.apache.commons.httpclient.HttpURL;
+//import org.apache.commons.httpclient.HttpsURL;
+//import org.apache.commons.httpclient.URI;
+//import org.apache.commons.httpclient.URIException;
 import org.apache.maven.plugin.logging.Log;
-import org.json.JSONObject;
+
 
 /**
  * Configuration settings are defined and stored by this class. All settings of
@@ -96,34 +98,34 @@ public final class Settings {
      * FIXME This is nasty
      */
     private Validator[] required = {
-        (new Validator() {
-
-            public void validate() throws VictimsException {
-
-                try {
-
-                    final String entry = settings.get(URL);
-                    if (entry == null || entry.length() <= 0) {
-                        throw new VictimsException(TextUI.fmt(Resources.ERR_SETTING_MISSING, URL));
-                    }
-
-                    URI url;
-                    try {
-                        url = new HttpURL(entry);
-
-                    } catch (URIException e) {
-                        url = new HttpsURL(entry);
-                    }
-
-                    if (!url.getPath().endsWith("service/v2")) {
-                        throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, url.toString()));
-                    }
-
-                } catch (URIException e) {
-                    throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
-                }
-            }
-        }),
+//        (new Validator() {
+//
+//            public void validate() throws VictimsException {
+//
+//                try {
+//
+//                    final String entry = settings.get(URL);
+//                    if (entry == null || entry.length() <= 0) {
+//                        throw new VictimsException(TextUI.fmt(Resources.ERR_SETTING_MISSING, URL));
+//                    }
+//
+//                    URI url;
+//                    try {
+//                        url = new HttpURL(entry);
+//
+//                    } catch (URIException e) {
+//                        url = new HttpsURL(entry);
+//                    }
+//
+//                    if (!url.getPath().endsWith("service/v2")) {
+//                        throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, url.toString()));
+//                    }
+//
+//                } catch (URIException e) {
+//                    throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
+//                }
+//            }
+//        }),
         (new Validator() {
 
             public void validate() throws VictimsException {
@@ -182,8 +184,17 @@ public final class Settings {
      * @param log Log to send output to.
      */
     public void show(Log log) {
-        JSONObject obj = new JSONObject(settings);
-        log.info(TextUI.prettyPrint(TextUI.fmt(Resources.INFO_SETTINGS_HEADING), obj));
+      StringBuilder info = new StringBuilder();
+      info.append("\n");
+      info.append(TextUI.box(Resources.INFO_SETTINGS_HEADING));
+      for (Entry<String, String> kv : settings.entrySet()){
+        info.append(kv.getKey())
+          .append(" : ")
+          .append(kv.getValue())
+          .append("\n");
+      }
+      log.info(info.toString());
+     
     }
 
     /**

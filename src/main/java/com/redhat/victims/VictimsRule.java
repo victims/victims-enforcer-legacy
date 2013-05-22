@@ -1,32 +1,19 @@
-/*
- * Copyright (C) 2012 Red Hat Inc.
- *
- * This file is part of enforce-victims-rule for the Maven Enforcer Plugin.
- * enforce-victims-rule is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * enforce-victims-rule is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
+
 package com.redhat.victims;
 
-import com.redhat.victims.commands.Command;
-import com.redhat.victims.commands.ExecutionContext;
-import com.redhat.victims.commands.FingerprintCommand;
-import com.redhat.victims.commands.MetadataCommand;
-import com.redhat.victims.db.Database;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Set;
+
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
+import com.redhat.victims.VictimsConfig;
+import com.redhat.victims.VictimsRecord;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
+
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
@@ -36,114 +23,179 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
  * plug-in. It provides the logic to synchronize a local database with a remote
  * database of vulnerable Java artifacts. This database is used to check for any
  * dependencies used within the project that may have known vulnerabilities.
- *
+ * 
  * @author gmurphy
  */
 public class VictimsRule implements EnforcerRule {
 
-    /*
-     * Configuration options available in pom.xml
-     */
-    private String url          = Settings.defaults.get(Settings.URL);
-    private String metadata     = Settings.defaults.get(Settings.METADATA);
-    private String fingerprint  = Settings.defaults.get(Settings.FINGERPRINT);
-    private String dbdriver     = Settings.defaults.get(Settings.DATABASE_DRIVER);
-    private String dburl        = Settings.defaults.get(Settings.DATABASE_URL);
-    private String updates      = Settings.defaults.get(Settings.UPDATE_DATABASE);
-    //private String tolerance    = Settings.defaults.get(Settings.TOLERANCE);
+  /*
+   * Configuration options available in pom.xml
+   */
+  private String metadata = Settings.defaults.get(Settings.METADATA);
+  private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
+  private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
 
-    /*
-     * Checks performed as a part of this rule
-     */
-    private Command[] commands = {
-        new MetadataCommand(),
-        new FingerprintCommand()
-    };
+  private String baseUrl = null;
+  private String entryPoint = null;
+  private String jdbcDriver = null;
+  private String jdbcUrl = null; 
+ 
+  /**
+   * Action taken when vulnerability detected
+   */
+  
+  private void vulnerabilityDetected(ExecutionContext ctx, String cve) throws VictimsException {
+    
+    StringBuilder logMsg = new StringBuilder(); 
+    logMsg.append("The Maven artifact: ")
+      .append(ctx.getArtifact().toString())
+      .append(" matches ")
+      .append(cve)
+      .append(" , a vulnerability within the Victims Database. ");
+    TextUI.report(ctx.getLog(), ctx.getAction(), logMsg.toString());
+    
+    
+    StringBuilder errMsg = new StringBuilder();
+    errMsg.append("Vulnerability detected: ")
+      .append(cve)
+      .append(" for more information visit -")
+      .append("\nhttps://cve.mitre.org/cgi-bin/cvename.cgi?name=")
+      .append(cve);
+    
+    if (ctx.getSettings().inFatalMode(ctx.getAction())){
+      throw new VictimsException(TextUI.wrap(80, errMsg.toString()));
+    }
+    
+  }
+      
+  /**
+   * Main entry point for the enforcer rule.
+   * 
+   * @param helper
+   * @throws EnforcerRuleException
+   */
+  public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
+   
+    MavenProject project;
+    try {
+      project = (MavenProject) helper.evaluate("${project}");
+    } catch (ExpressionEvaluationException e) {
+      throw new EnforcerRuleException(e.getMessage());
+    }
+    
+    execute(setupContext(helper.getLog()), project.getArtifacts());
+     
+  }
+  
+  public ExecutionContext setupContext(Log log) throws EnforcerRuleException {
+    
+    ExecutionContext ctx = new ExecutionContext(); 
+    ctx.setLog(log);
+    ctx.setSettings(new Settings());
+    ctx.getSettings().set(Settings.METADATA, metadata);
+    ctx.getSettings().set(Settings.FINGERPRINT, fingerprint);
+    ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
+          
+    if (baseUrl != null){
+      System.setProperty(VictimsConfig.Key.URI, baseUrl);
+    }
+    if (entryPoint != null){
+      System.setProperty(VictimsConfig.Key.ENTRY, entryPoint);
+    }
+    if (jdbcDriver != null){
+      System.setProperty(VictimsConfig.Key.DB_DRIVER, jdbcDriver);
+    }
+    if (jdbcUrl != null){
+      System.setProperty(VictimsConfig.Key.DB_URL, jdbcUrl);
+    }
+       
+    try {
+      ctx.getSettings().validate();
+      ctx.getSettings().show(ctx.getLog());
+     
+    } catch (VictimsException e) {
+      throw new EnforcerRuleException(e.getMessage());
+    }
+    
+    return ctx;
+  }
+  
+  
+  public void execute(ExecutionContext ctx, Set<Artifact> artifacts) throws EnforcerRuleException {
+        
+    try {
 
-    /**
-     * Main entry point for the enforcer rule.
-     *
-     * @param helper
-     * @throws EnforcerRuleException
-     */
-    public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
-
-        Log log = helper.getLog();
-
-        try {
-
-            // Create and validate settings
-            Settings setup = new Settings();
-            setup.set(Settings.URL, url);
-            setup.set(Settings.METADATA, metadata);
-            setup.set(Settings.FINGERPRINT, fingerprint);
-            setup.set(Settings.UPDATE_DATABASE, updates);
-            setup.set(Settings.DATABASE_DRIVER, dbdriver);
-            setup.set(Settings.DATABASE_URL, dburl);
-            //setup.set(Settings.TOLERANCE, tolerance);
-            setup.validate();
-            setup.show(log);
-
-            // Create database instance
-            Database db = new Database(dbdriver, dburl);
-
-            // Synchronize it with the server
-            if (setup.updatesEnabled()) {
-                Synchronizer sync = new Synchronizer(setup.get(Settings.URL));
-                sync.synchronizeDatabase(db);
+      VictimsDBInterface db = VictimsDB.db();
+      if (ctx.getSettings().updatesEnabled()){
+        db.synchronize();
+      }
+     
+      for (Artifact a : artifacts){
+        
+        ctx.setArtifact(a);
+        
+        // fingerprint  
+        if (ctx.getSettings().isEnabled(Settings.FINGERPRINT)){
+          ctx.setAction(Settings.FINGERPRINT);
+          String dependency = a.getFile().getAbsolutePath();
+          for (VictimsRecord vr : VictimsScanner.getRecords(dependency)){
+            
+            for (String cve : db.getVulnerabilities(vr)){
+              vulnerabilityDetected(ctx, cve);
+              
             }
-
-            ExecutionContext ctx = new ExecutionContext();
-            ctx.setDatabase(db);
-            ctx.setLog(log);
-            ctx.setSettings(setup);
-
-            MavenProject project = (MavenProject) helper.evaluate("${project}");
-            for (Artifact a : project.getArtifacts()) {
-
-                for (Command c : commands) {
-                    ctx.setArtifact(a);
-                    c.execute(ctx);
-                }
-            }
-            log.info(TextUI.fmt(Resources.INFO_NO_VULNERABILTIES_FOUND));
-
-        } catch (ExpressionEvaluationException e) {
-            log.error(e.toString());
-
-        } catch (VictimsException e) {
-            throw new EnforcerRuleException(e.getMessage());
+          }
         }
-
+        
+        // metadata 
+        if (ctx.getSettings().isEnabled(Settings.METADATA)){
+          ctx.setAction(Settings.METADATA);
+          HashMap<String, String> gav = new HashMap<String, String>();
+          gav.put("groupId", a.getGroupId());
+          gav.put("artifactId", a.getArtifactId());
+          gav.put("version", a.getVersion());
+          
+          for (String cve : db.getVulnerabilities(gav)){
+            vulnerabilityDetected(ctx, cve);       
+          }         
+        }        
+      }
+      
+    } catch (IOException e){
+      throw new EnforcerRuleException(e.getMessage());
+    
+    } catch (VictimsException e) {
+      throw new EnforcerRuleException(e.getMessage());
     }
+  }
 
-    /**
-     * The database is always synchronized with the Victims Server. The initial
-     * import of entries will take some time but subsequent requests should be
-     * relatively fast.
-     *
-     * @return Always will return false.
-     */
-    public boolean isCacheable() {
-        return false;
-    }
+  /**
+   * The database is always synchronized with the Victims Server. The initial
+   * import of entries will take some time but subsequent requests should be
+   * relatively fast.
+   * 
+   * @return Always will return false.
+   */
+  public boolean isCacheable() {
+    return false;
+  }
 
-    /**
-     * Feature not used by this rule.
-     *
-     * @param er
-     * @return Always returns false
-     */
-    public boolean isResultValid(EnforcerRule er) {
-        return false;
-    }
+  /**
+   * Feature not used by this rule.
+   * 
+   * @param er
+   * @return Always returns false
+   */
+  public boolean isResultValid(EnforcerRule er) {
+    return false;
+  }
 
-    /**
-     * Feature not used by this plug-in. Return a bogus value.
-     *
-     * @return Not used
-     */
-    public String getCacheId() {
-        return " " + new java.util.Date().getTime();
-    }
+  /**
+   * Feature not used by this plug-in. Return a bogus value.
+   * 
+   * @return Not used
+   */
+  public String getCacheId() {
+    return " " + new java.util.Date().getTime();
+  }
 }
