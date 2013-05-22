@@ -72,7 +72,7 @@ public final class ExecutionContext {
    * Set the current action being executed
    */
   public void setAction(String action) {
-
+    this.action = action;
   }
 
 }
