@@ -9,6 +9,7 @@ import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.VictimsConfig;
 import com.redhat.victims.VictimsRecord;
+import java.util.HashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -47,23 +48,26 @@ public class VictimsRule implements EnforcerRule {
   private void vulnerabilityDetected(ExecutionContext ctx, String cve) throws VictimsException {
     
     StringBuilder logMsg = new StringBuilder(); 
-    logMsg.append("The Maven artifact: ")
-      .append(ctx.getArtifact().toString())
-      .append(" matches ")
-      .append(cve)
-      .append(" , a vulnerability within the Victims Database. ");
+    logMsg.append("The dependency ")
+      .append(ctx.getArtifact().getArtifactId())
+      .append("-")
+      .append(ctx.getArtifact().getVersion())
+      .append(" matches a vulnerability within the victims database. [")
+      .append(cve.trim())
+      .append("]");
+     
     TextUI.report(ctx.getLog(), ctx.getAction(), logMsg.toString());
     
     
     StringBuilder errMsg = new StringBuilder();
-    errMsg.append("Vulnerability detected: ")
+    errMsg.append("VULNERABILITY ")
       .append(cve)
-      .append(" for more information visit -")
-      .append("\nhttps://cve.mitre.org/cgi-bin/cvename.cgi?name=")
+      .append(" DETECTED! For more information visit ")
+      .append(" https://cve.mitre.org/cgi-bin/cvename.cgi?name=")
       .append(cve);
     
     if (ctx.getSettings().inFatalMode(ctx.getAction())){
-      throw new VictimsException(TextUI.wrap(80, errMsg.toString()));
+      throw new VictimsException(errMsg.toString());
     }
     
   }
@@ -133,7 +137,7 @@ public class VictimsRule implements EnforcerRule {
       for (Artifact a : artifacts){
         
         ctx.setArtifact(a);
-        
+        boolean alreadyReported = false;
         // fingerprint  
         if (ctx.getSettings().isEnabled(Settings.FINGERPRINT)){
           ctx.setAction(Settings.FINGERPRINT);
@@ -142,7 +146,7 @@ public class VictimsRule implements EnforcerRule {
             
             for (String cve : db.getVulnerabilities(vr)){
               vulnerabilityDetected(ctx, cve);
-              
+              alreadyReported = true;
             }
           }
         }
@@ -156,7 +160,9 @@ public class VictimsRule implements EnforcerRule {
           gav.put("version", a.getVersion());
           
           for (String cve : db.getVulnerabilities(gav)){
-            vulnerabilityDetected(ctx, cve);       
+            if (! alreadyReported){
+              vulnerabilityDetected(ctx, cve);
+            }
           }         
         }        
       }

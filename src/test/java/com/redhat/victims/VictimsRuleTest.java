@@ -75,8 +75,7 @@ public class VictimsRuleTest extends TestCase {
 
     // Overwrite the victims url
     System.setProperty(VictimsConfig.Key.URI, "http://localhost:1337");
-    //System.setProperty(VictimsConfig.Key.URI, "http://72.14.182.106");
-    
+   
     ExecutionContext context = new ExecutionContext();
     context.setLog(new SystemStreamLog());
     context.setSettings(new Settings());
@@ -89,34 +88,33 @@ public class VictimsRuleTest extends TestCase {
     try {
       enforcer.execute(context, artifacts);
     } catch (Exception e) {
-      e.printStackTrace();
-      System.out.println(e.getMessage());
       assertFalse(e instanceof VictimsException);
       assertFalse(e instanceof EnforcerRuleException);
     }
-/*
+    
+    // Skip the updates from now on 
+    context.getSettings().set(Settings.UPDATE_DATABASE, Settings.UPDATES_DISABLED);
+
+    // Expect failure on fingerprint
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_FATAL);
     context.getSettings().set(Settings.METADATA, Settings.MODE_DISABLED);
-
+    
     try {
       enforcer.execute(context, artifacts);
     } catch (Exception e) {
-      e.printStackTrace();
+      System.out.println(e.getMessage());
       assertTrue(e instanceof EnforcerRuleException);
     }
 
+    // Expect failure on metadata
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_DISABLED);
     context.getSettings().set(Settings.METADATA, Settings.MODE_FATAL);
 
     try {
       enforcer.execute(context, artifacts);
     } catch (Exception e) {
-      e.printStackTrace();
+      System.out.println(e.getMessage());
       assertTrue(e instanceof EnforcerRuleException);
-    }
-    
-    */
+    }  
   }
-  
-
 }
