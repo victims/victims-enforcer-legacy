@@ -50,15 +50,10 @@ public final class Settings {
      * names of each of the private members in the rule definition in order to
      * be configurable in the pom.xml @see VictimsRule
      */
-    public static final String URL              = "url";
+
     public static final String METADATA         = "metadata";
     public static final String FINGERPRINT      = "fingerprint";
     public static final String UPDATE_DATABASE  = "updates";
-    public static final String DATABASE_DRIVER  = "dbdriver";
-    public static final String DATABASE_URL     = "dburl";
-    //public static final String TOLERANCE        = "tolerance";
-    public static final String SEARCH_EXTENDED  = "metadataplus";
-
 
     /**
      * Reasonably sensible defaults
@@ -67,16 +62,11 @@ public final class Settings {
 
     static {
         Map<String, String> mappings = new HashMap<String, String>();
-        mappings.put(URL, "https://victims-websec.rhcloud.com/service/v2");
+
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
-        //mappings.put(DATABASE_URL, "jdbc:derby:.victims;create=true");
-        //mappings.put(DATABASE_DRIVER, "org.apache.derby.jdbc.EmbeddedDriver");
-        mappings.put(DATABASE_URL, "jdbc:h2:.victims");
-        mappings.put(DATABASE_DRIVER, "org.h2.Driver");
-        //mappings.put(TOLERANCE, "0.75");
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
-        mappings.put(SEARCH_EXTENDED, "false");
+
         defaults = Collections.unmodifiableMap(mappings);
     }
     /**

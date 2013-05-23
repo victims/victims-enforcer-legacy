@@ -60,6 +60,10 @@ public class Resources extends ListResourceBundle  {
      */
     public static final String ERR_INVALID_MODE             = "ERR_INVALID_MODE";
 
+    /**
+     * Show details of where updates are being retrieved from.
+     */
+    public static final String INFO_UPDATES                 = "INFO_UPDATES";
 
     @Override
     protected Object[][] getContents() {
@@ -69,7 +73,8 @@ public class Resources extends ListResourceBundle  {
             { ERR_VULNERABLE_DEPENDENCY,    "For more information visit https://cve.mitre.org/cgi-bin/cvename.cgi?name=%s"},
             { INFO_SETTINGS_HEADING,        "enforce-victims-rule settings"                                     },
             { ERR_INVALID_MODE,             "Invalid mode '%s' for the '%s' setting. Valid options are %s. "    },
-            { ERR_SETTING_MISSING,          "Required setting '%s' is missing. "                                }
+            { ERR_SETTING_MISSING,          "Required setting '%s' is missing. "                                },
+            { INFO_UPDATES,                 "Retrieving updates from %s..."                                     }
 
 
         };

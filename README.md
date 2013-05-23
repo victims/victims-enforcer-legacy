@@ -100,11 +100,18 @@ mvn clean package -Djsse.enableSNIExtension=false
 
 The following options can be specified as child elements of ```<rule implementation="com.redhat.victims.VictimsRule">```
 
-### url
+### baseUrl
 
    The URL of the victims web service to used to synchronize the local database.
 
-   default: "https://victims-websec.rhcloud.com/service/v2"
+   default: "https://victi.ms"
+
+### entryPoint 
+
+    The entrypoint of the victims webservice to synchronize against
+
+    default: "/service"
+
 
 ### metadata
 
@@ -130,22 +137,27 @@ The following options can be specified as child elements of ```<rule implementat
    default : auto
 
 
-### dbdriver
+### jdbcDriver
 
    The jdbc driver to use for the local victims database. By default victims uses an embedded H2 database.
 
    default :  org.h2.Driver
 
-### dburl
+### jdbcUrl
 
    The jdbc connection URL to for the local victims database.
 
-   default : jdbc:h2:.victims
+   default : .victims (embedded h2 instance).
 
-### metadataplus
+### jdbcUser
 
-   By default, victims-enforcer will compare the GAV information extracted from each dependency against that
- within the victims database. If the metadataplus option is enabled, this feature will be extended so metadata within the MANIFEST.MF and pom.properties files is also examined for matches.
+   The username to use for the jdbc connection.
 
-   allowed : true, false  
-   default : false
+   default : ""
+
+### jdbcPass
+
+   The password to use for the jdbc connection.
+
+   default : ""
+

@@ -160,6 +160,7 @@ public class VictimsRule implements EnforcerRule {
 
       VictimsDBInterface db = VictimsDB.db();
       if (ctx.getSettings().updatesEnabled()){
+        ctx.getLog().info(TextUI.fmt(Resources.INFO_UPDATES, VictimsConfig.serviceURI()));
         db.synchronize();
       }
 
