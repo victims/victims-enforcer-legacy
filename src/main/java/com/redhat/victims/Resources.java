@@ -66,7 +66,7 @@ public class Resources extends ListResourceBundle  {
         return new Object[][]{
             { ERR_VULNERABLE_HEADING,       "Vulnerability detected!" },
             { INFO_VULNERABLE_DEPENDENCY,   "The dependency %s-%s matches a vulnerability recorded in the victims database. [%s]"},
-            { ERR_VULNERABLE_DEPENDENCY,    "%s detected. For more information visit https://cve.mitre.org/cgi-bin/cvename.cgi?name=%s"},
+            { ERR_VULNERABLE_DEPENDENCY,    "For more information visit https://cve.mitre.org/cgi-bin/cvename.cgi?name=%s"},
             { INFO_SETTINGS_HEADING,        "enforce-victims-rule settings"                                     },
             { ERR_INVALID_MODE,             "Invalid mode '%s' for the '%s' setting. Valid options are %s. "    },
             { ERR_SETTING_MISSING,          "Required setting '%s' is missing. "                                }

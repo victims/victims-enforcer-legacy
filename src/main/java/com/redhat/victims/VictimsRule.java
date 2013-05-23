@@ -21,20 +21,15 @@ package com.redhat.victims;
  * #L%
  */
 
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Set;
-
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-import com.redhat.victims.VictimsConfig;
-import com.redhat.victims.VictimsRecord;
-import java.util.HashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
-
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
@@ -55,18 +50,19 @@ public class VictimsRule implements EnforcerRule {
   private String metadata = Settings.defaults.get(Settings.METADATA);
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
-
   private String baseUrl = null;
   private String entryPoint = null;
   private String jdbcDriver = null;
   private String jdbcUrl = null;
+  private String jdbcUser = null;
+  private String jdbcPass = null;
 
   /**
    * Action taken when vulnerability detected
    */
-
   private void vulnerabilityDetected(ExecutionContext ctx, String cve) throws VictimsException {
 
+    // Report finding
     String logMsg = TextUI.fmt(Resources.INFO_VULNERABLE_DEPENDENCY,
                         ctx.getArtifact().getArtifactId(),
                         ctx.getArtifact().getVersion(),
@@ -74,10 +70,10 @@ public class VictimsRule implements EnforcerRule {
 
     TextUI.report(ctx.getLog(), ctx.getAction(), logMsg);
 
+    // Fail if in fatal mode
     StringBuilder errMsg = new StringBuilder();
     errMsg.append(TextUI.box(TextUI.fmt(Resources.ERR_VULNERABLE_HEADING)))
-          .append(TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY, cve, cve));
-
+          .append(TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY, cve));
 
     if (ctx.getSettings().inFatalMode(ctx.getAction())){
       throw new VictimsException(errMsg.toString());
@@ -104,6 +100,13 @@ public class VictimsRule implements EnforcerRule {
 
   }
 
+  /**
+   * Configure execution context based on sensible defaults and
+   * overrides in the pom.xml configuration.
+   * @param log
+   * @return Configured execution context
+   * @throws EnforcerRuleException
+   */
   public ExecutionContext setupContext(Log log) throws EnforcerRuleException {
 
     ExecutionContext ctx = new ExecutionContext();
@@ -125,6 +128,12 @@ public class VictimsRule implements EnforcerRule {
     if (jdbcUrl != null){
       System.setProperty(VictimsConfig.Key.DB_URL, jdbcUrl);
     }
+    if (jdbcUser != null){
+      System.setProperty(VictimsConfig.Key.DB_USER, jdbcUser);
+    }
+    if (jdbcPass != null){
+      System.setProperty(VictimsConfig.Key.DB_PASS, jdbcPass);
+    }
 
     try {
       ctx.getSettings().validate();
@@ -138,6 +147,13 @@ public class VictimsRule implements EnforcerRule {
   }
 
 
+  /**
+   * Scan the supplied artifacts given the provided execution context. An
+   * exception will be raised if a vulnerable artifact has been detected.
+   * @param ctx
+   * @param artifacts
+   * @throws EnforcerRuleException
+   */
   public void execute(ExecutionContext ctx, Set<Artifact> artifacts) throws EnforcerRuleException {
 
     try {
@@ -151,6 +167,7 @@ public class VictimsRule implements EnforcerRule {
 
         ctx.setArtifact(a);
         boolean alreadyReported = false;
+
         // fingerprint
         if (ctx.getSettings().isEnabled(Settings.FINGERPRINT)){
           ctx.setAction(Settings.FINGERPRINT);
@@ -165,7 +182,7 @@ public class VictimsRule implements EnforcerRule {
         }
 
         // metadata
-        if (ctx.getSettings().isEnabled(Settings.METADATA)){
+        if (! alreadyReported && ctx.getSettings().isEnabled(Settings.METADATA)){
           ctx.setAction(Settings.METADATA);
           HashMap<String, String> gav = new HashMap<String, String>();
           gav.put("groupId", a.getGroupId());
@@ -173,9 +190,7 @@ public class VictimsRule implements EnforcerRule {
           gav.put("version", a.getVersion());
 
           for (String cve : db.getVulnerabilities(gav)){
-            if (! alreadyReported){
-              vulnerabilityDetected(ctx, cve);
-            }
+            vulnerabilityDetected(ctx, cve);
           }
         }
       }
