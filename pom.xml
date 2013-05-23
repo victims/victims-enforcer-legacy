@@ -12,10 +12,15 @@
   <name>victims-enforcer</name>
   <description>Checks a Maven projects dependencies against a database of known vulnerable artifacts.</description>
   <url>http://victims-websec.rhcloud.com</url>
+  <organization>
+		<name>The Victims Project</name>
+		<url>http://victi.ms</url>
+  </organization>
+	<inceptionYear>2013</inceptionYear>
   <licenses>
     <license>
-        <name>GNU General Public License, Version 3</name>
-        <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+        <name>GNU Affero General Public License, Version 3</name>
+        <url>http://www.gnu.org/licenses/agpl-3.0.txt</url>
         <distribution>repo</distribution>
     </license>
   </licenses>
@@ -100,6 +105,19 @@
   </scm>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>1.4</version>
+				<configuration>
+			    <descriptionTemplate>${basedir}/src/license/header.ftl</descriptionTemplate>
+					<verbose>false</verbose>
+					<licenseName>agpl_v3</licenseName>
+					<roots>
+						<root>src/main</root>
+					</roots>
+				</configuration>
+			</plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

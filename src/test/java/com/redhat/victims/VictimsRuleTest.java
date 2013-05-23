@@ -39,11 +39,11 @@ public class VictimsRuleTest extends TestCase {
               FileUtils.readFileToByteArray(new File("testdata", "test.json"));
           Headers headers = exchange.getResponseHeaders();
           headers.add("Content-Type", "application/json");
-                   
+
           exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, json.length);
           exchange.getResponseBody().write(json);
           exchange.getResponseBody().close();
-          
+
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -67,7 +67,7 @@ public class VictimsRuleTest extends TestCase {
     Artifact testArtifact =
         new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null,
             handler);
-    
+
     testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
 
     HashSet<Artifact> artifacts = new HashSet<Artifact>();
@@ -75,7 +75,7 @@ public class VictimsRuleTest extends TestCase {
 
     // Overwrite the victims url
     System.setProperty(VictimsConfig.Key.URI, "http://localhost:1337");
-   
+
     ExecutionContext context = new ExecutionContext();
     context.setLog(new SystemStreamLog());
     context.setSettings(new Settings());
@@ -91,16 +91,17 @@ public class VictimsRuleTest extends TestCase {
       assertFalse(e instanceof VictimsException);
       assertFalse(e instanceof EnforcerRuleException);
     }
-    
-    // Skip the updates from now on 
+
+    // Skip the updates from now on
     context.getSettings().set(Settings.UPDATE_DATABASE, Settings.UPDATES_DISABLED);
 
     // Expect failure on fingerprint
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_FATAL);
     context.getSettings().set(Settings.METADATA, Settings.MODE_DISABLED);
-    
+
     try {
       enforcer.execute(context, artifacts);
+      fail("Exception expected");
     } catch (Exception e) {
       System.out.println(e.getMessage());
       assertTrue(e instanceof EnforcerRuleException);
@@ -112,9 +113,23 @@ public class VictimsRuleTest extends TestCase {
 
     try {
       enforcer.execute(context, artifacts);
+      fail("Exception expected");
     } catch (Exception e) {
       System.out.println(e.getMessage());
       assertTrue(e instanceof EnforcerRuleException);
-    }  
+    }
   }
+
+
+  public void testDefaultSettings() {
+
+      VictimsRule enforcer = new VictimsRule();
+      try {
+          enforcer.setupContext(new SystemStreamLog());
+      } catch (EnforcerRuleException e){
+          fail(e.getMessage());
+      }
+
+  }
+
 }

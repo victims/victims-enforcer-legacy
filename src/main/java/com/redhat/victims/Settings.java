@@ -1,30 +1,28 @@
+package com.redhat.victims;
+
 /*
- * Copyright (C) 2012 Red Hat Inc.
- *
- * This file is part of enforce-victims-rule for the Maven Enforcer Plugin.
- * enforce-victims-rule is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * #%L
+ * This file is part of victims-enforcer.
+ * %%
+ * Copyright (C) 2013 The Victims Project
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * enforce-victims-rule is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * #L%
  */
-package com.redhat.victims;
 
 import java.util.*;
 import java.util.Map.Entry;
-
-//import org.apache.commons.httpclient.HttpURL;
-//import org.apache.commons.httpclient.HttpsURL;
-//import org.apache.commons.httpclient.URI;
-//import org.apache.commons.httpclient.URIException;
 import org.apache.maven.plugin.logging.Log;
 
 
@@ -94,38 +92,9 @@ public final class Settings {
 
         public void validate() throws VictimsException;
     }
-    /**
-     * FIXME This is nasty
-     */
+
     private Validator[] required = {
-//        (new Validator() {
-//
-//            public void validate() throws VictimsException {
-//
-//                try {
-//
-//                    final String entry = settings.get(URL);
-//                    if (entry == null || entry.length() <= 0) {
-//                        throw new VictimsException(TextUI.fmt(Resources.ERR_SETTING_MISSING, URL));
-//                    }
-//
-//                    URI url;
-//                    try {
-//                        url = new HttpURL(entry);
-//
-//                    } catch (URIException e) {
-//                        url = new HttpsURL(entry);
-//                    }
-//
-//                    if (!url.getPath().endsWith("service/v2")) {
-//                        throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, url.toString()));
-//                    }
-//
-//                } catch (URIException e) {
-//                    throw new VictimsException(TextUI.fmt(Resources.ERR_INVALID_URL, settings.get(URL)));
-//                }
-//            }
-//        }),
+
         (new Validator() {
 
             public void validate() throws VictimsException {
@@ -185,16 +154,12 @@ public final class Settings {
      */
     public void show(Log log) {
       StringBuilder info = new StringBuilder();
-      info.append("\n");
-      info.append(TextUI.box(Resources.INFO_SETTINGS_HEADING));
+      info.append(TextUI.box(TextUI.fmt(Resources.INFO_SETTINGS_HEADING)));
       for (Entry<String, String> kv : settings.entrySet()){
-        info.append(kv.getKey())
-          .append(" : ")
-          .append(kv.getValue())
-          .append("\n");
+        info.append(String.format("%-12s = %s\n", kv.getKey(), kv.getValue()));
       }
       log.info(info.toString());
-     
+
     }
 
     /**
@@ -240,8 +205,4 @@ public final class Settings {
     }
 
 
-    public boolean extendedMetadataEnabled() {
-        String val = settings.get(SEARCH_EXTENDED);
-        return val != null && val.equalsIgnoreCase("true");
-    }
 }
