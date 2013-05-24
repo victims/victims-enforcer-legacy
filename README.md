@@ -2,7 +2,7 @@
 
 ## About
 
-This rule provides the logic to scan a Maven's project's dependencies against a database of artifacts with publicly known Common Vulnerabilities and Exposures (CVE). The canonical version of the database is hosted at https://victims-websec.rhcloud.com and is maintained by Red Hat security teams. 
+This rule provides the logic to scan a Maven's project's dependencies against a database of artifacts with publicly known Common Vulnerabilities and Exposures (CVE). The canonical version of the database is hosted at https://victi.ms and is maintained by Red Hat security teams. 
 
 ## Getting Started
 
@@ -45,9 +45,6 @@ mvn clean package -Djsse.enableSNIExtension=false
                 <configuration>
                   <rules>
                     <rule implementation="com.redhat.victims.VictimsRule">     
-                      <!-- The URL where the rule should synchronize the database with --> 
-                      <url>https://victims-websec.rhcloud.com/service/v2</url>
-                            
                       <!-- 
                         Check the project's dependencies against the database using 
                         name and version. The default mode for this is 'warning'.
