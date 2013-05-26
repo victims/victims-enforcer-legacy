@@ -19,7 +19,7 @@ mvn clean package -Djsse.enableSNIExtension=false
 ```
 
 ## Example pom.xml
-```
+```xml
   <project>
     ...
     <build>
@@ -32,7 +32,7 @@ mvn clean package -Djsse.enableSNIExtension=false
             <dependency>
               <groupId>com.redhat.victims</groupId>
               <artifactId>enforce-victims-rule</artifactId>
-              <version>1.1</version>
+              <version>1.2</version>
               <type>jar</type>
             </dependency>
           </dependencies>
