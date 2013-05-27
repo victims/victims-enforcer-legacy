@@ -1,4 +1,4 @@
-# vnforce-victims-rule sample project
+# enforce-victims-rule sample project
 
 ## Usage
 
