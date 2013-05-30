@@ -82,6 +82,7 @@ public class VictimsRuleTest extends TestCase {
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_WARNING);
     context.getSettings().set(Settings.METADATA, Settings.MODE_WARNING);
     context.getSettings().set(Settings.UPDATE_DATABASE, Settings.UPDATES_AUTO);
+    context.getSettings().set(Settings.NTHREADS, Settings.DEFAULT_THREADS);
 
     VictimsRule enforcer = new VictimsRule();
 

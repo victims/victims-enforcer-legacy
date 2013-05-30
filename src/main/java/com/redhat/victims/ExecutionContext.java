@@ -22,7 +22,7 @@ package com.redhat.victims;
 
 
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.jcs.JCS;
 import org.apache.maven.plugin.logging.Log;
 
 /**
@@ -33,9 +33,9 @@ import org.apache.maven.plugin.logging.Log;
 public final class ExecutionContext {
 
   private Settings settings;
-  private Artifact artifact;
   private String action;
   private Log log;
+  private JCS cache;
 
   /**
    * @return Configuration to apply to this execution context.
@@ -44,12 +44,12 @@ public final class ExecutionContext {
     return settings;
   }
 
-  /**
-   * @return The artifact associated with this execution context.
-   */
-  public Artifact getArtifact() {
-    return artifact;
-  }
+//  /**
+//   * @return The artifact associated with this execution context.
+//   */
+//  public Artifact getArtifact() {
+//    return artifact;
+//  }
 
   /**
    * @return The log to use within this execution context.
@@ -64,6 +64,13 @@ public final class ExecutionContext {
   public String getAction() {
     return this.action;
   }
+  
+  /**
+   * @return The cache to store artifacts in
+   */
+  public JCS getCache(){
+    return this.cache;
+  }
 
   /**
    * Applies the given settings to the execution context.
@@ -72,14 +79,14 @@ public final class ExecutionContext {
     this.settings = setup;
   }
 
-  /**
-   * Associates the given artifact with this execution context.
-   *
-   * @param a The artifact to associate with this context.
-   */
-  public void setArtifact(final Artifact a) {
-    this.artifact = a;
-  }
+//  /**
+//   * Associates the given artifact with this execution context.
+//   *
+//   * @param a The artifact to associate with this context.
+//   */
+//  public void setArtifact(final Artifact a) {
+//    this.artifact = a;
+//  }
 
   /**
    * Send all messages to this log.
@@ -95,6 +102,11 @@ public final class ExecutionContext {
    */
   public void setAction(String action) {
     this.action = action;
+  }
+
+  public void setCache(JCS cache) {
+    this.cache = cache;
+    
   }
 
 }
