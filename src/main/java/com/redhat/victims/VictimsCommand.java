@@ -7,30 +7,29 @@ import org.apache.maven.artifact.Artifact;
 
 import com.redhat.victims.database.VictimsDBInterface;
 
-public class VictimsCommand implements Callable<String> {
+public class VictimsCommand implements Callable<ArtifactStub> {
   
   private Artifact artifact;
   private ExecutionContext context;
-  private VictimsDBInterface database;
   
-  
-  public VictimsCommand(ExecutionContext ctx, Artifact a, VictimsDBInterface db){
+  public VictimsCommand(ExecutionContext ctx, Artifact a){
     this.context = ctx;
     this.artifact = a;
-    this.database = db;
   }
 
-  public String call() throws Exception {
+  public ArtifactStub call() throws Exception {
      
     boolean alreadyReported = false;
-    context.getLog().debug("Inspecting: " + artifact.toString());
+    context.debug("Inspecting: " + artifact.toString());
+    
+    VictimsDBInterface db = context.getDatabase();
 
     // fingerprint
-    if (context.getSettings().isEnabled(Settings.FINGERPRINT)){
+    if (context.isEnabled(Settings.FINGERPRINT)){
       
       String dependency = artifact.getFile().getAbsolutePath();
       for (VictimsRecord vr : VictimsScanner.getRecords(dependency)){
-        for (String cve : database.getVulnerabilities(vr)){
+        for (String cve : db.getVulnerabilities(vr)){
           vulnerabilityDetected(Settings.FINGERPRINT, cve);
           alreadyReported = true;
         }
@@ -38,20 +37,20 @@ public class VictimsCommand implements Callable<String> {
     }
     
     // metadata
-    if (! alreadyReported && context.getSettings().isEnabled(Settings.METADATA)){
+    if (! alreadyReported && context.isEnabled(Settings.METADATA)){
      
       HashMap<String, String> gav = new HashMap<String, String>();
       gav.put("groupId", artifact.getGroupId());
       gav.put("artifactId", artifact.getArtifactId());
       gav.put("version", artifact.getVersion());
 
-      for (String cve : database.getVulnerabilities(gav)){
+      for (String cve : db.getVulnerabilities(gav)){
         vulnerabilityDetected(Settings.METADATA, cve);
       }
     }
     
     
-    return artifact.getArtifactId();
+    return new ArtifactStub(artifact);
     
   }
   
@@ -73,7 +72,7 @@ public class VictimsCommand implements Callable<String> {
     errMsg.append(TextUI.box(TextUI.fmt(Resources.ERR_VULNERABLE_HEADING)))
           .append(TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY, cve));
 
-    if (context.getSettings().inFatalMode(action)){
+    if (context.inFatalMode(action)){
       throw new VictimsException(errMsg.toString());
     }
 

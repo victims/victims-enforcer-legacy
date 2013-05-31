@@ -22,8 +22,10 @@ package com.redhat.victims;
 
 
 
-import org.apache.jcs.JCS;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.logging.Log;
+
+import com.redhat.victims.database.VictimsDBInterface;
 
 /**
  * Context to pass to each command.
@@ -33,9 +35,9 @@ import org.apache.maven.plugin.logging.Log;
 public final class ExecutionContext {
 
   private Settings settings;
-  private String action;
   private Log log;
-  private JCS cache;
+  private ArtifactCache cache;
+  private VictimsDBInterface database;
 
   /**
    * @return Configuration to apply to this execution context.
@@ -44,13 +46,6 @@ public final class ExecutionContext {
     return settings;
   }
 
-//  /**
-//   * @return The artifact associated with this execution context.
-//   */
-//  public Artifact getArtifact() {
-//    return artifact;
-//  }
-
   /**
    * @return The log to use within this execution context.
    */
@@ -58,17 +53,11 @@ public final class ExecutionContext {
     return this.log;
   }
 
-  /**
-   * @return The current action being performed.
-   */
-  public String getAction() {
-    return this.action;
-  }
   
   /**
    * @return The cache to store artifacts in
    */
-  public JCS getCache(){
+  public ArtifactCache getCache(){
     return this.cache;
   }
 
@@ -79,15 +68,6 @@ public final class ExecutionContext {
     this.settings = setup;
   }
 
-//  /**
-//   * Associates the given artifact with this execution context.
-//   *
-//   * @param a The artifact to associate with this context.
-//   */
-//  public void setArtifact(final Artifact a) {
-//    this.artifact = a;
-//  }
-
   /**
    * Send all messages to this log.
    *
@@ -97,16 +77,96 @@ public final class ExecutionContext {
     this.log = l;
   }
 
-  /**
-   * Set the current action being executed
-   */
-  public void setAction(String action) {
-    this.action = action;
+  public VictimsDBInterface getDatabase() {
+    return database;
   }
 
-  public void setCache(JCS cache) {
+  public void setDatabase(VictimsDBInterface database) {
+    this.database = database;
+  }
+  
+  public void setCache(ArtifactCache cache) {
     this.cache = cache;
     
   }
+  
+  public void debug(String msg){
+    getLog().debug(msg);
+  }
+  
+  public void info(String msg){
+    getLog().info(msg);
+  }
+  public void warn(String msg){  
+    getLog().warn(msg);
+  }
+  public void error(String msg){
+    getLog().error(msg);
+  }
+  
+  public void debug(Throwable e){
+    getLog().debug(e);
+  }
+  
+  public void info(Throwable e){
+    getLog().info(e);
+  }
+  public void warn(Throwable e){  
+    getLog().warn(e);
+  }
+  public void error(Throwable e){
+    getLog().error(e);
+  }
+  
+  /**
+   * Returns true if the setting is in fatal mode. Used when
+   * determining if the rule should fail a build.
+   * @param setting The configuration item to check if in fatal mode.
+   * @return True when the setting is in fatal mode.
+   */
+  public boolean inFatalMode(String setting) {
+      String val = settings.get(setting);
+      return val != null && val.equalsIgnoreCase(Settings.MODE_FATAL);
+  }
+
+  /**
+   * Returns true if the value associated with the supplied
+   * key isn't set to disabled.
+   * @param setting The setting to check if is disabled.
+   * @return  True if the setting is enabled.
+   */
+  public boolean isEnabled(String setting) {
+      String val = settings.get(setting);
+      return val != null && !val.equalsIgnoreCase(Settings.MODE_DISABLED);
+  }
+
+  /**
+   * Returns true if automatic updates are enabled.
+   * @return True if automatic updates of database are enabled.
+   */
+  public boolean updatesEnabled() {
+      String val = settings.get(Settings.UPDATE_DATABASE);
+      return val != null && val.equalsIgnoreCase(Settings.UPDATES_AUTO);
+  }
+
+  public boolean isCached(Artifact a){
+    if (cache != null){
+      return cache.isCached(a);
+    }
+    return false;
+  }
+  
+  public void cacheArtifact(ArtifactStub a){
+    if (cache != null)
+      cache.put(a);
+  }
+  
+  public ArtifactStub cachedArtifact(String artifactId){
+    if (cache != null){
+      return (ArtifactStub) cache.get(artifactId);
+    }
+    return null;
+  }
+ 
 
 }

@@ -51,6 +51,11 @@ public final class Settings {
      */
     public static final String CACHE_REGION_NAME = "default";
     
+    /*
+     * Period for which the cache remains valid.
+     */
+    public static final String CACHE_VALIDITY = "3600";
+    
     /** 
      * The default number of threads to use for execution.
      */
@@ -65,13 +70,14 @@ public final class Settings {
     public static final String FINGERPRINT      = "fingerprint";
     public static final String UPDATE_DATABASE  = "updates";
     public static final String CACHE_REGION     = "cacheRegion";
-    public static final String CACHE_SETTINGS   = "cacheSettings";
+    public static final String CACHE_SETTINGS   = "cacheConfig";
     public static final String NTHREADS         = "threads";
 
     /**
      * Reasonably sensible defaults
      */
     public static final Map<String, String> defaults;
+
 
     static {
         Map<String, String> mappings = new HashMap<String, String>();
@@ -178,36 +184,7 @@ public final class Settings {
         }
     }
 
-    /**
-     * Returns true if the setting is in fatal mode. Used when
-     * determining if the rule should fail a build.
-     * @param setting The configuration item to check if in fatal mode.
-     * @return True when the setting is in fatal mode.
-     */
-    public boolean inFatalMode(String setting) {
-        String val = settings.get(setting);
-        return val != null && val.equalsIgnoreCase(MODE_FATAL);
-    }
-
-    /**
-     * Returns true if the value associated with the supplied
-     * key isn't set to disabled.
-     * @param setting The setting to check if is disabled.
-     * @return  True if the setting is enabled.
-     */
-    public boolean isEnabled(String setting) {
-        String val = settings.get(setting);
-        return val != null && !val.equalsIgnoreCase(MODE_DISABLED);
-    }
-
-    /**
-     * Returns true if automatic updates are enabled.
-     * @return True if automatic updates of database are enabled.
-     */
-    public boolean updatesEnabled() {
-        String val = settings.get(UPDATE_DATABASE);
-        return val != null && val.equalsIgnoreCase(UPDATES_AUTO);
-    }
+ 
 
 
 }

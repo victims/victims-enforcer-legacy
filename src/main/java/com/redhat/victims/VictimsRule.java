@@ -22,21 +22,16 @@ package com.redhat.victims;
  */
 
 import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -44,9 +39,6 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
-import org.apache.jcs.JCS;
-import org.apache.jcs.access.exception.CacheException;
-import org.apache.jcs.engine.control.CompositeCacheManager;
 
 
 /**
@@ -66,7 +58,8 @@ public class VictimsRule implements EnforcerRule {
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
   private String cacheRegion = Settings.defaults.get(Settings.CACHE_REGION);
-  private String cacheSettings = null; // manual configuration only
+  private String cacheValidity = Settings.defaults.get(Settings.CACHE_VALIDITY);
+  private String cacheConfig = null;
   private String threads = Settings.defaults.get(Settings.NTHREADS);
   private String baseUrl = null;
   private String entryPoint = null;
@@ -111,46 +104,34 @@ public class VictimsRule implements EnforcerRule {
     ctx.getSettings().set(Settings.METADATA, metadata);
     ctx.getSettings().set(Settings.FINGERPRINT, fingerprint);
     ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
-    ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheSettings);
+    ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheConfig);
     ctx.getSettings().set(Settings.CACHE_REGION,  cacheRegion);
+    ctx.getSettings().set(Settings.CACHE_VALIDITY, cacheValidity);
     ctx.getSettings().set(Settings.NTHREADS, threads);
     
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
    
     // Setup cache
+    int validity = -1; // always expire if settings invalid
     try {
-      CompositeCacheManager ccm = CompositeCacheManager.getUnconfiguredInstance(); 
-      Properties p = new Properties(); 
-      FileInputStream fin = null; 
-      try {
-        if (cacheSettings != null) {
-          fin = new FileInputStream(cacheSettings);   
-          p.load(fin);
-        }
-      } catch (FileNotFoundException e){
-        fin = null;
-      } catch (IOException e){
-        fin = null;
-      }
-      if (fin == null){
-        // default cache configuration
-        p.put("jcs.default", "DC");
-        p.put("jcs.default.cacheattributes",  "org.apache.jcs.engin.CompositeCacheAttributes");
-        p.put("jcs.default.cacheattributes.MaxObjects", "100");
-        p.put("jcs.default.cacheattributes.MemoryCacheName", "org.apache.jcs.engine.memory.lru.LRUMemoryCache");
-        p.put("jcs.auxiliary.DC",  "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory");
-        p.put("jcs.auxiliary.DC.attributes", "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes");
-        p.put("jcs.auxiliary.DC.attributes.DiskPath", ".victims.cache");
-      }    
-           
-      ccm.configure(p);
-      
-      ctx.setCache(JCS.getInstance(ctx.getSettings().get(Settings.CACHE_REGION))); 
-    } catch (CacheException e){
-      ctx.setCache(null);
+      validity = Integer.parseInt(cacheValidity);
+    } catch(NumberFormatException e){
     }
-        
+    
+    try {
+      
+      if (cacheConfig != null){
+        ctx.setCache(new ArtifactCache(new File(cacheConfig), cacheRegion, validity));
+      } else {
+        ctx.setCache(new ArtifactCache(cacheRegion, validity));
+      }
+      
+    } catch (Exception e){
+      ctx.setCache(new ArtifactCache(cacheRegion, validity));
+    }
+          
+    // Setup database 
     if (baseUrl != null){
       System.setProperty(VictimsConfig.Key.URI, baseUrl);
       ctx.getSettings().set(VictimsConfig.Key.URI, baseUrl);
@@ -175,16 +156,22 @@ public class VictimsRule implements EnforcerRule {
       System.setProperty(VictimsConfig.Key.DB_PASS, jdbcPass);
       ctx.getSettings().set(VictimsConfig.Key.DB_PASS, "(not shown)");
     }
+    
+    // Setup database
+    try {
+      ctx.setDatabase(VictimsDB.db());
+    } catch (VictimsException e) {
+      ctx.debug(e);
+      throw new EnforcerRuleException(e.getMessage());
+    }
 
+    // validate settings
     try {
       ctx.getSettings().validate();
       ctx.getSettings().show(ctx.getLog());
    
-
     } catch (VictimsException e) {
-      
-      ctx.getLog().debug(e);
-      
+      ctx.debug(e); 
       throw new EnforcerRuleException(e.getMessage());
     }
 
@@ -203,70 +190,54 @@ public class VictimsRule implements EnforcerRule {
 
     try {
 
-      VictimsDBInterface db = VictimsDB.db();
-      ctx.getLog().debug("Connecting to database using: " + VictimsConfig.dbDriver());
-      
-      if (ctx.getSettings().updatesEnabled()){
-        ctx.getLog().info(TextUI.fmt(Resources.INFO_UPDATES, VictimsConfig.serviceURI()));
-        db.synchronize();
+      if (ctx.updatesEnabled()){
+        ctx.info(TextUI.fmt(Resources.INFO_UPDATES, VictimsConfig.serviceURI()));
+        ctx.getDatabase().synchronize();
       }
 
       int nthreads = Integer.parseInt(ctx.getSettings().get(Settings.NTHREADS));
-      List<Future<String>> jobs = new ArrayList<Future<String>>();
+      List<Future<ArtifactStub>> jobs = new ArrayList<Future<ArtifactStub>>();
       ExecutorService executor = Executors.newFixedThreadPool(nthreads);
       
       for (Artifact a : artifacts){
-      
+           
         // Check if we've already examined this value
-        if (ctx.getCache() != null){
-          String cachedFile = (String) ctx.getCache().get(a.getArtifactId());
-          if (cachedFile != null && cachedFile.equals(a.getFile().getAbsolutePath())){
-            ctx.getLog().debug("Skipping cached artifact: " + a.toString());
-            continue;
-          }
+        if (ctx.isCached(a)){
+         
+          ctx.debug("Skipping cached artifact: " +
+              ctx.cachedArtifact(a.getArtifactId()).toString());
+          continue;
         }
                 
-        ctx.getLog().debug("Checking: " + a.toString());
-        Callable<String> worker = new VictimsCommand(ctx, a, db);
+        ctx.debug("Checking: " + a.toString());
+        Callable<ArtifactStub> worker = new VictimsCommand(ctx, a);
         jobs.add(executor.submit(worker));    
       }
       
-      for (Future<String> future : jobs){
+      for (Future<ArtifactStub> future : jobs){
         
         try {
           
-          String checked = future.get();
+          ArtifactStub checked = future.get();
           if (checked != null){
-            ctx.getLog().debug("Finished checking: " + checked.toString());
-            // update cache if needed
-            if (ctx.getCache() != null){
-              try {
-                
-                // so this is dumb
-                for (Artifact artifact : artifacts){
-                  if (artifact.getArtifactId().equals(checked))
-                    ctx.getCache().put(checked, artifact.getFile().getAbsolutePath());
-                }
-                
-              } catch(CacheException e){
-                ctx.getLog().debug("Unable to cache object: " + e.toString());
-              }
-            }
+            ctx.debug("Finished checking: " + checked.toString());
+            ctx.cacheArtifact(checked);
           }
           
         } catch (InterruptedException e){
-          ctx.getLog().info(e.getMessage());
+          ctx.info(e.getMessage());
         } catch (ExecutionException e){
+          ctx.debug(e);
           throw new EnforcerRuleException(e.getCause().getMessage());
         }
       }
  
     } catch (IOException e){
-      ctx.getLog().debug(e);
+      ctx.debug(e);
       throw new EnforcerRuleException(e.getMessage());
 
     } catch (VictimsException e) {
-      ctx.getLog().debug(e);
+      ctx.debug(e);
       throw new EnforcerRuleException(e.getMessage());
     }
   }
