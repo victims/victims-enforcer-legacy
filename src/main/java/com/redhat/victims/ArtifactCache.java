@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Calendar;
+//import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 
@@ -21,14 +21,11 @@ public class ArtifactCache {
   public static final int CACHE_VALIDITY_PERIOD = 2;
   
   private JCS cache; 
-  private String region;
-  private int validity;
-  
-  
-  public ArtifactCache(String cacheRegion, int period){
-    region = cacheRegion;
-    validity = period;
-    
+  private Date lastUpdated;
+
+  public ArtifactCache(String path, Date lastUpdated){
+    this.lastUpdated = lastUpdated;
+
     // stfu 
     Logger.getLogger("org.apache.jcs").setLevel(Level.OFF);
     
@@ -39,15 +36,14 @@ public class ArtifactCache {
     p.put("jcs.default.cacheattributes.MemoryCacheName", "org.apache.jcs.engine.memory.lru.LRUMemoryCache");
     p.put("jcs.auxiliary.DC",  "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory");
     p.put("jcs.auxiliary.DC.attributes", "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes");
-    p.put("jcs.auxiliary.DC.attributes.DiskPath", ".victims.cache");
+    p.put("jcs.auxiliary.DC.attributes.DiskPath", path);
         
     initCacheWithProperties(p);
  
   }
   
-  public ArtifactCache(File propertiesFile, String cacheRegion, int period) throws FileNotFoundException, IOException{
-    region = cacheRegion;
-    validity = period;
+  public ArtifactCache(File propertiesFile, Date lastUpdated) throws FileNotFoundException, IOException{
+    this.lastUpdated = lastUpdated;
     Properties p = new Properties();
     p.load(new FileInputStream(propertiesFile));
     initCacheWithProperties(p);
@@ -58,9 +54,8 @@ public class ArtifactCache {
     try {
       CompositeCacheManager ccm = CompositeCacheManager.getUnconfiguredInstance(); 
       ccm.configure(p);
-     
-      cache = JCS.getInstance(region);
-      
+      cache = JCS.getInstance("default");
+
     } catch (CacheException e){
       cache = null;
   
@@ -114,20 +109,25 @@ public class ArtifactCache {
     return false;
   }
   
-  public boolean expired(Date cachedDate) {
-
-    if (validity < 0)
-      return true;
-    
-    
-    Calendar now = Calendar.getInstance();
-    now.setTime(new Date());
-    
-    Calendar expiration = Calendar.getInstance();
-    expiration.setTime(cachedDate);
-    expiration.add(Calendar.SECOND, (int) validity);
-    
-    return expiration.before(now);
- 
+  public boolean expired(Date cachedDate){
+    return cachedDate.before(lastUpdated);
   }
+  
+//  public boolean expired(Date cachedDate) {
+//
+//    if (validity < 0)
+//      return true;
+//    
+//    
+//    Calendar now = Calendar.getInstance();
+//    now.setTime(new Date());
+//    
+//    Calendar expiration = Calendar.getInstance();
+//    expiration.setTime(cachedDate);
+//    expiration.add(Calendar.SECOND, validity);
+//    
+//    return expiration.before(now);
+// 
+//  }
+  
 }

@@ -20,7 +20,7 @@ public class VictimsCommand implements Callable<ArtifactStub> {
   public ArtifactStub call() throws Exception {
      
     boolean alreadyReported = false;
-    context.debug("Inspecting: " + artifact.toString());
+    context.debug("Scanning: " + artifact.toString());
     
     VictimsDBInterface db = context.getDatabase();
 

@@ -25,6 +25,7 @@ import com.redhat.victims.database.VictimsDB;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -57,8 +58,6 @@ public class VictimsRule implements EnforcerRule {
   private String metadata = Settings.defaults.get(Settings.METADATA);
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
-  private String cacheRegion = Settings.defaults.get(Settings.CACHE_REGION);
-  private String cacheExpiry = Settings.defaults.get(Settings.CACHE_VALIDITY);
   private String cacheConfig = null;
   private String threads = Settings.defaults.get(Settings.NTHREADS);
   private String baseUrl = null;
@@ -68,7 +67,6 @@ public class VictimsRule implements EnforcerRule {
   private String jdbcUser = null;
   private String jdbcPass = null;
 
-  
 
   /**
    * Main entry point for the enforcer rule.
@@ -80,14 +78,12 @@ public class VictimsRule implements EnforcerRule {
 
     MavenProject project;
     try {
-      project = (MavenProject) helper.evaluate("${project}");
+      project = ((MavenProject) helper.evaluate("${project}")).clone();
     } catch (ExpressionEvaluationException e) {
       helper.getLog().debug(e);
       throw new EnforcerRuleException(e.toString(), e.getCause());
     }
-
     execute(setupContext(helper.getLog()), project.getArtifacts());
-
   }
 
   /**
@@ -106,32 +102,11 @@ public class VictimsRule implements EnforcerRule {
     ctx.getSettings().set(Settings.FINGERPRINT, fingerprint);
     ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
     ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheConfig);
-    ctx.getSettings().set(Settings.CACHE_REGION,  cacheRegion);
-    ctx.getSettings().set(Settings.CACHE_VALIDITY, cacheExpiry);
     ctx.getSettings().set(Settings.NTHREADS, threads);
     
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
    
-    // Setup cache
-    int validity = -1; // always expire if settings invalid
-    try {
-      validity = Integer.parseInt(cacheExpiry);
-    } catch(NumberFormatException e){
-    }
-    
-    try {
-      
-      if (cacheConfig != null){
-        ctx.setCache(new ArtifactCache(new File(cacheConfig), cacheRegion, validity));
-      } else {
-        ctx.setCache(new ArtifactCache(cacheRegion, validity));
-      }
-      
-    } catch (Exception e){
-      ctx.setCache(new ArtifactCache(cacheRegion, validity));
-    }
-          
     // Setup database 
     if (baseUrl != null){
       System.setProperty(VictimsConfig.Key.URI, baseUrl);
@@ -165,8 +140,41 @@ public class VictimsRule implements EnforcerRule {
       ctx.debug(e);
       throw new EnforcerRuleException(e.getMessage());
     }
+    
+    // Check the last time the database was updated
+    Date lastUpdated; 
+    if (VictimsConfig.purgeCache()){
+      lastUpdated = new Date();   // Will invalidate all cache data
+    } else{ 
+      try {
+        lastUpdated = ctx.getDatabase().lastUpdated();
+      } catch(VictimsException e){
+        lastUpdated = new Date();
+      }
+    }
+    
+    // Set the cache file
+    String cacheFile; 
+    try {
+      cacheFile = new File(VictimsConfig.home(), "victims-enforcer.cache").getCanonicalPath();
+    } catch(IOException e){
+      cacheFile = ".victims-enforcer.cache";
+    }
+    
+    // Setup the cache
+    try {
+      
+      if (cacheConfig != null){
+        ctx.setCache(new ArtifactCache(new File(cacheConfig), lastUpdated));
+      } else {
+        ctx.setCache(new ArtifactCache(cacheFile, lastUpdated));
+      }
+      
+    } catch (Exception e){
+      ctx.setCache(new ArtifactCache(cacheFile, lastUpdated));
+    }
 
-    // validate settings
+    // Validate settings
     try {
       ctx.getSettings().validate();
       ctx.getSettings().show(ctx.getLog());
@@ -178,7 +186,6 @@ public class VictimsRule implements EnforcerRule {
 
     return ctx;
   }
-
 
   /**
    * Scan the supplied artifacts given the provided execution context. An
@@ -204,13 +211,10 @@ public class VictimsRule implements EnforcerRule {
            
         // Check if we've already examined this value
         if (ctx.isCached(a)){
-         
-          ctx.debug("Skipping cached artifact: " +
-              ctx.cachedArtifact(a.getArtifactId()).toString());
+          ctx.debug("Cached: " + a.getArtifactId());
           continue;
         }
                 
-        ctx.debug("Checking: " + a.toString());
         Callable<ArtifactStub> worker = new VictimsCommand(ctx, a);
         jobs.add(executor.submit(worker));    
       }
@@ -221,7 +225,7 @@ public class VictimsRule implements EnforcerRule {
           
           ArtifactStub checked = future.get();
           if (checked != null){
-            ctx.debug("Finished checking: " + checked.toString());
+            ctx.debug("Done: " + checked.getArtifactId());
             ctx.cacheArtifact(checked);
           }
           
