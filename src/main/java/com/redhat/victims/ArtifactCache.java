@@ -112,7 +112,7 @@ public class ArtifactCache {
     return false;
   }
   
-  private boolean expired(Date cachedDate) {
+  public boolean expired(Date cachedDate) {
 
     if (validity < 0)
       return true;

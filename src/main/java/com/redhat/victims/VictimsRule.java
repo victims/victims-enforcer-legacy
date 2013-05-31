@@ -58,7 +58,7 @@ public class VictimsRule implements EnforcerRule {
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
   private String cacheRegion = Settings.defaults.get(Settings.CACHE_REGION);
-  private String cacheValidity = Settings.defaults.get(Settings.CACHE_VALIDITY);
+  private String cacheExpiry = Settings.defaults.get(Settings.CACHE_VALIDITY);
   private String cacheConfig = null;
   private String threads = Settings.defaults.get(Settings.NTHREADS);
   private String baseUrl = null;
@@ -106,7 +106,7 @@ public class VictimsRule implements EnforcerRule {
     ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
     ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheConfig);
     ctx.getSettings().set(Settings.CACHE_REGION,  cacheRegion);
-    ctx.getSettings().set(Settings.CACHE_VALIDITY, cacheValidity);
+    ctx.getSettings().set(Settings.CACHE_VALIDITY, cacheExpiry);
     ctx.getSettings().set(Settings.NTHREADS, threads);
     
     // Only need to query using one hashing mechanism
@@ -115,7 +115,7 @@ public class VictimsRule implements EnforcerRule {
     // Setup cache
     int validity = -1; // always expire if settings invalid
     try {
-      validity = Integer.parseInt(cacheValidity);
+      validity = Integer.parseInt(cacheExpiry);
     } catch(NumberFormatException e){
     }
     

@@ -54,7 +54,7 @@ public final class Settings {
     /*
      * Period for which the cache remains valid.
      */
-    public static final String CACHE_VALIDITY = "3600";
+    public static final String DEFAULT_CACHE_LIFETIME = "3600";
     
     /** 
      * The default number of threads to use for execution.
@@ -71,6 +71,7 @@ public final class Settings {
     public static final String UPDATE_DATABASE  = "updates";
     public static final String CACHE_REGION     = "cacheRegion";
     public static final String CACHE_SETTINGS   = "cacheConfig";
+    public static final String CACHE_VALIDITY   = "cacheExpiry";
     public static final String NTHREADS         = "threads";
 
     /**
@@ -87,6 +88,7 @@ public final class Settings {
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
         mappings.put(CACHE_REGION, CACHE_REGION_NAME);
         mappings.put(NTHREADS, DEFAULT_THREADS);
+        mappings.put(CACHE_VALIDITY, DEFAULT_CACHE_LIFETIME);
 
         defaults = Collections.unmodifiableMap(mappings);
     }

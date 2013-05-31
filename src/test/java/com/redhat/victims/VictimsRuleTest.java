@@ -3,6 +3,7 @@ package com.redhat.victims;
 import com.redhat.victims.database.VictimsDB;
 import com.sun.net.httpserver.Headers;
 import java.io.File;
+import java.util.Date;
 import java.util.HashSet;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -87,7 +88,7 @@ public class VictimsRuleTest extends TestCase {
   }
   
   //@Test
-  public void testCacheExpiration() throws Exception {
+  public void testCache() throws Exception {
     
     ArtifactCache cache = new ArtifactCache("default", 5);
     
@@ -99,12 +100,33 @@ public class VictimsRuleTest extends TestCase {
     testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
 
     cache.put(testArtifact);
-    assert(cache.get(testArtifact.getArtifactId())!= null);
+    ArtifactStub stub = cache.get(testArtifact.getArtifactId());
+    
+    assert(stub != null);
+    
+    boolean cached = cache.isCached(testArtifact);
+    assert(cached == true);
+    
     
     Thread.sleep(6000);
     
-    assert(! cache.isCached(testArtifact));
-   
+      
+    stub = cache.get(testArtifact.getArtifactId());
+    assert(stub == null);
+    
+    cached = cache.isCached(testArtifact);
+    assert(cached == false);
+      
+    
+  }
+  
+  public void testCacheExpiration() throws Exception {
+    
+    ArtifactCache cache = new ArtifactCache("default", 5);
+    Date then = new Date();
+    assert(! cache.expired(then));
+    Thread.sleep(6000);
+    assert(cache.expired(then));
     
     
   }

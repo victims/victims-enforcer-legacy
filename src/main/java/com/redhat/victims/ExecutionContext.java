@@ -52,7 +52,6 @@ public final class ExecutionContext {
   public Log getLog() {
     return this.log;
   }
-
   
   /**
    * @return The cache to store artifacts in
@@ -90,6 +89,9 @@ public final class ExecutionContext {
     
   }
   
+  // FIXME Ended up pulling these out into convenience 
+  // methods. I don't really like how this is panning out
+  // but will do for the time being...
   public void debug(String msg){
     getLog().debug(msg);
   }
