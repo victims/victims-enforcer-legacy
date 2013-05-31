@@ -154,7 +154,7 @@ public final class ExecutionContext {
   public boolean isCached(Artifact a){
     if (cache != null){
       return cache.isCached(a);
-    }
+    } 
     return false;
   }
   

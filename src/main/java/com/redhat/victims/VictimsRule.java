@@ -82,7 +82,8 @@ public class VictimsRule implements EnforcerRule {
     try {
       project = (MavenProject) helper.evaluate("${project}");
     } catch (ExpressionEvaluationException e) {
-      throw new EnforcerRuleException(e.getMessage());
+      helper.getLog().debug(e);
+      throw new EnforcerRuleException(e.toString(), e.getCause());
     }
 
     execute(setupContext(helper.getLog()), project.getArtifacts());

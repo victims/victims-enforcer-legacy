@@ -29,7 +29,7 @@ public class ArtifactCache {
     region = cacheRegion;
     validity = period;
     
-    // stfu jcs
+    // stfu 
     Logger.getLogger("org.apache.jcs").setLevel(Level.OFF);
     
     Properties p = new Properties();
@@ -40,7 +40,6 @@ public class ArtifactCache {
     p.put("jcs.auxiliary.DC",  "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory");
     p.put("jcs.auxiliary.DC.attributes", "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes");
     p.put("jcs.auxiliary.DC.attributes.DiskPath", ".victims.cache");
-    //p.put("jcs.auxiliary.RC.cacheeventlogger", "import org.apache.maven.plugin.logging.Log");
         
     initCacheWithProperties(p);
  
@@ -102,9 +101,12 @@ public class ArtifactCache {
       if (cache != null){
         ArtifactStub cached = (ArtifactStub) cache.get(a.getArtifactId());
         if (cached != null){
-          return cached.getFilename() == a.getFile().getCanonicalPath() && 
-              ! expired(cached.getCachedDate());
           
+          if (expired(cached.getCachedDate())){
+            cache.remove(cached.getArtifactId());
+            return false;
+          }
+          return cached.getFilename().equals(a.getFile().getCanonicalPath()); 
         }
       }
     } catch (Exception e){
