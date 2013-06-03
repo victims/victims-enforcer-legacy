@@ -52,12 +52,24 @@ public class ArtifactCache {
     
     Properties p = new Properties();
     p.put("jcs.default", "DC");
-    p.put("jcs.default.cacheattributes",  "org.apache.jcs.engine.CompositeCacheAttributes");
-    p.put("jcs.default.cacheattributes.MaxObjects", "100");
-    p.put("jcs.default.cacheattributes.MemoryCacheName", "org.apache.jcs.engine.memory.lru.LRUMemoryCache");
-    p.put("jcs.auxiliary.DC",  "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory");
-    p.put("jcs.auxiliary.DC.attributes", "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes");
-    p.put("jcs.auxiliary.DC.attributes.DiskPath", path);
+
+    p.put("jcs.default.cacheattributes",                  
+      "org.apache.jcs.engine.CompositeCacheAttributes");
+
+    p.put("jcs.default.cacheattributes.MaxObjects",       
+      "1000");
+
+    p.put("jcs.default.cacheattributes.MemoryCacheName",  
+      "org.apache.jcs.engine.memory.lru.LRUMemoryCache");
+
+    p.put("jcs.auxiliary.DC",                             
+      "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory");
+
+    p.put("jcs.auxiliary.DC.attributes", 
+      "org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes");
+
+    p.put("jcs.auxiliary.DC.attributes.DiskPath", 
+      path);
         
     initCacheWithProperties(p);
  

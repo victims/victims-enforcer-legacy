@@ -51,10 +51,6 @@ public final class Settings {
      */
     public static final String CACHE_REGION_NAME = "default";
     
-    /** 
-     * The default number of threads to use for execution.
-     */
-    public static final String DEFAULT_THREADS  = "4";
     /*
      * Different settings that can be configured. These need to map back to the
      * names of each of the private members in the rule definition in order to
@@ -65,7 +61,6 @@ public final class Settings {
     public static final String FINGERPRINT      = "fingerprint";
     public static final String UPDATE_DATABASE  = "updates";
     public static final String CACHE_SETTINGS   = "cacheConfig";
-    public static final String NTHREADS         = "threads";
 
     /**
      * Reasonably sensible defaults
@@ -79,8 +74,7 @@ public final class Settings {
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
-        mappings.put(NTHREADS, DEFAULT_THREADS);
-
+      
         defaults = Collections.unmodifiableMap(mappings);
     }
     /**
@@ -176,8 +170,5 @@ public final class Settings {
             v.validate();
         }
     }
-
- 
-
 
 }

@@ -59,7 +59,6 @@ public class VictimsRule implements EnforcerRule {
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
   private String cacheConfig = null;
-  private String threads = Settings.defaults.get(Settings.NTHREADS);
   private String baseUrl = null;
   private String entryPoint = null;
   private String jdbcDriver = null;
@@ -102,7 +101,6 @@ public class VictimsRule implements EnforcerRule {
     ctx.getSettings().set(Settings.FINGERPRINT, fingerprint);
     ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
     ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheConfig);
-    ctx.getSettings().set(Settings.NTHREADS, threads);
     
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
@@ -203,9 +201,8 @@ public class VictimsRule implements EnforcerRule {
         ctx.getDatabase().synchronize();
       }
 
-      int nthreads = Integer.parseInt(ctx.getSettings().get(Settings.NTHREADS));
       List<Future<ArtifactStub>> jobs = new ArrayList<Future<ArtifactStub>>();
-      ExecutorService executor = Executors.newFixedThreadPool(nthreads);
+      ExecutorService executor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
       
       for (Artifact a : artifacts){
            
