@@ -128,9 +128,9 @@ The following options can be specified as child elements of ```<rule implementat
 
 ### updates
 
-   Allows the configuration of the synchronization mechanism. In automatic mode new entries in the victims database are pulled from the victims-web instance during each build. The synchronization mechanism may be disabled and processed manually for closed build environments.
+   Allows the configuration of the synchronization mechanism. In automatic mode new entries in the victims database are pulled from the victims-web instance during each build. In daily mode new entries are pulled from the victims-web instance only once per day. The synchronization mechanism may be disabled and processed manually for closed build environments.
 
-   allowed : auto, offline  
+   allowed : auto, daily, offline  
    default : auto
 
 
