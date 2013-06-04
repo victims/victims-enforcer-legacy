@@ -22,10 +22,12 @@ package com.redhat.victims;
  */
 
 import com.redhat.victims.database.VictimsDB;
-import java.io.File;
+import com.redhat.victims.database.VictimsDBInterface;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -58,7 +60,6 @@ public class VictimsRule implements EnforcerRule {
   private String metadata = Settings.defaults.get(Settings.METADATA);
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
-  private String cacheConfig = null;
   private String baseUrl = null;
   private String entryPoint = null;
   private String jdbcDriver = null;
@@ -100,7 +101,6 @@ public class VictimsRule implements EnforcerRule {
     ctx.getSettings().set(Settings.METADATA, metadata);
     ctx.getSettings().set(Settings.FINGERPRINT, fingerprint);
     ctx.getSettings().set(Settings.UPDATE_DATABASE, updates);
-    ctx.getSettings().set(Settings.CACHE_SETTINGS, cacheConfig);
     
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
@@ -135,41 +135,16 @@ public class VictimsRule implements EnforcerRule {
     try {
       ctx.setDatabase(VictimsDB.db());
     } catch (VictimsException e) {
-      ctx.debug(e);
+      log.debug(e);
       throw new EnforcerRuleException(e.getMessage());
     }
-    
-    // Check the last time the database was updated
-    Date lastUpdated; 
-    if (VictimsConfig.purgeCache()){
-      lastUpdated = new Date();   // Will invalidate all cache data
-    } else{ 
-      try {
-        lastUpdated = ctx.getDatabase().lastUpdated();
-      } catch(VictimsException e){
-        lastUpdated = new Date();
-      }
-    }
-    
-    // Set the cache file
-    String cacheFile; 
+
+    // Setup cache
     try {
-      cacheFile = new File(VictimsConfig.home(), "victims-enforcer.cache").getCanonicalPath();
-    } catch(IOException e){
-      cacheFile = ".victims-enforcer.cache";
-    }
-    
-    // Setup the cache
-    try {
-      
-      if (cacheConfig != null){
-        ctx.setCache(new ArtifactCache(new File(cacheConfig), lastUpdated));
-      } else {
-        ctx.setCache(new ArtifactCache(cacheFile, lastUpdated));
-      }
-      
-    } catch (Exception e){
-      ctx.setCache(new ArtifactCache(cacheFile, lastUpdated));
+      ctx.setCache(new VictimsResultCache());
+    } catch (IOException e){
+      log.debug(e);
+      throw new EnforcerRuleException(e.getMessage());
     }
 
     // Validate settings
@@ -178,11 +153,51 @@ public class VictimsRule implements EnforcerRule {
       ctx.getSettings().show(ctx.getLog());
    
     } catch (VictimsException e) {
-      ctx.debug(e); 
+      log.debug(e); 
       throw new EnforcerRuleException(e.getMessage());
     }
 
     return ctx;
+  }
+  
+  /**
+   * Updates the database according to the given configuration
+   * @param ctx
+   * @throws VictimsException
+   */
+  public void updateDatabase(ExecutionContext ctx) throws VictimsException {
+    
+    VictimsDBInterface db = ctx.getDatabase();
+    Log log = ctx.getLog();
+    
+    
+    Date updated = db.lastUpdated(); 
+    
+    // update automatically every time
+    if (ctx.updateAlways()){
+      log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+      db.synchronize();     
+   
+    // update once per day
+    } else if (ctx.updateDaily()){
+      
+      Date today = new Date();
+      SimpleDateFormat cmp = new SimpleDateFormat("yyyMMdd");
+      boolean updatedToday = cmp.format(today).equals(cmp.format(updated));
+      
+      if (! updatedToday){
+        log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+        db.synchronize();
+        
+      } else {
+        log.debug("Database last synchronized: " + updated.toString());
+      }
+      
+    // updates disabled 
+    } else {
+      log.debug("Database synchronization disabled.");
+    }
+    
   }
 
   /**
@@ -193,54 +208,100 @@ public class VictimsRule implements EnforcerRule {
    * @throws EnforcerRuleException
    */
   public void execute(ExecutionContext ctx, Set<Artifact> artifacts) throws EnforcerRuleException {
-
+    
+    VictimsResultCache cache = ctx.getCache();
+    Log log = ctx.getLog();
+    int cores = Runtime.getRuntime().availableProcessors();
+    ExecutorService executor = null;
+    List<Future<ArtifactStub>> jobs = null; 
+    
     try {
-
-      if (ctx.updatesEnabled()){
-        ctx.info(TextUI.fmt(Resources.INFO_UPDATES, VictimsConfig.serviceURI()));
-        ctx.getDatabase().synchronize();
-      }
-
-      List<Future<ArtifactStub>> jobs = new ArrayList<Future<ArtifactStub>>();
-      ExecutorService executor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
+      
+      // Synchronize database with victims service
+      updateDatabase(ctx);
+      
+      // Concurrently process each dependency 
+      executor = Executors.newFixedThreadPool(cores);
+      jobs = new ArrayList<Future<ArtifactStub>>();
       
       for (Artifact a : artifacts){
            
-        // Check if we've already examined this value
-        if (ctx.isCached(a)){
-          ctx.debug("Cached: " + a.getArtifactId());
+        // Check if we've already inspected this dependency
+        if (cache.exists(a.getId())){
+          
+          HashSet<String> cves = cache.get(a.getId());
+          log.debug("Cached: " + a.getId());
+          if (! cves.isEmpty()){
+            
+            VulnerableArtifactException err = new VulnerableArtifactException(a, Settings.FINGERPRINT, cves);
+            log.info(err.getLogMessage());
+            
+            if (err.isFatal(ctx)){
+              throw new EnforcerRuleException(err.getErrorMessage());
+            }
+          }
           continue;
         }
-                
+            
+        // Not in cache process artifact
         Callable<ArtifactStub> worker = new VictimsCommand(ctx, a);
         jobs.add(executor.submit(worker));    
-      }
       
+      }
+      executor.shutdown();
+      
+      // Cache results or report failure of command 
       for (Future<ArtifactStub> future : jobs){
         
         try {
           
           ArtifactStub checked = future.get();
           if (checked != null){
-            ctx.debug("Done: " + checked.getArtifactId());
-            ctx.cacheArtifact(checked);
+            log.debug("Done: " + checked.getId());
+            cache.add(checked.getId(), null);
           }
           
         } catch (InterruptedException e){
-          ctx.info(e.getMessage());
+          log.info(e.getMessage());
+        
         } catch (ExecutionException e){
-          ctx.debug(e);
-          throw new EnforcerRuleException(e.getCause().getMessage());
+          
+          log.debug(e);
+          Throwable cause = e.getCause();
+          
+          if (cause instanceof VulnerableArtifactException){
+            
+            VulnerableArtifactException ve = (VulnerableArtifactException) cause;
+            // cache vulnerable artifact
+            cache.add(ve.getId(), ve.getVulnerabilites());
+            
+            // log error
+            log.info(ve.getLogMessage());
+
+            // fatal exception
+            if (ve.isFatal(ctx)){
+              throw new EnforcerRuleException(ve.getErrorMessage());
+            }
+           
+          } else { 
+            throw new EnforcerRuleException(e.getCause().getMessage());
+          }
         }
       }
- 
+      
     } catch (IOException e){
-      ctx.debug(e);
+      log.debug(e);
       throw new EnforcerRuleException(e.getMessage());
-
+      
     } catch (VictimsException e) {
-      ctx.debug(e);
+      log.debug(e);
       throw new EnforcerRuleException(e.getMessage());
+    
+    } finally { 
+      
+      if (executor != null){
+        executor.shutdownNow();
+      }
     }
   }
 
@@ -273,4 +334,6 @@ public class VictimsRule implements EnforcerRule {
   public String getCacheId() {
     return " " + new java.util.Date().getTime();
   }
+  
+  
 }

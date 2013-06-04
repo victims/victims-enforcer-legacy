@@ -22,7 +22,6 @@ package com.redhat.victims;
 
 
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.logging.Log;
 
 import com.redhat.victims.database.VictimsDBInterface;
@@ -36,7 +35,7 @@ public final class ExecutionContext {
 
   private Settings settings;
   private Log log;
-  private ArtifactCache cache;
+  private VictimsResultCache cache;
   private VictimsDBInterface database;
 
   /**
@@ -56,7 +55,7 @@ public final class ExecutionContext {
   /**
    * @return The cache to store artifacts in
    */
-  public ArtifactCache getCache(){
+  public VictimsResultCache getCache(){
     return this.cache;
   }
 
@@ -84,42 +83,11 @@ public final class ExecutionContext {
     this.database = database;
   }
   
-  public void setCache(ArtifactCache cache) {
-    this.cache = cache;
+  public void setCache(VictimsResultCache victimsResultCache) {
+    this.cache = victimsResultCache;
     
   }
-  
-  // FIXME Ended up pulling these out into convenience 
-  // methods. I don't really like how this is panning out
-  // but will do for the time being...
-  public void debug(String msg){
-    getLog().debug(msg);
-  }
-  
-  public void info(String msg){
-    getLog().info(msg);
-  }
-  public void warn(String msg){  
-    getLog().warn(msg);
-  }
-  public void error(String msg){
-    getLog().error(msg);
-  }
-  
-  public void debug(Throwable e){
-    getLog().debug(e);
-  }
-  
-  public void info(Throwable e){
-    getLog().info(e);
-  }
-  public void warn(Throwable e){  
-    getLog().warn(e);
-  }
-  public void error(Throwable e){
-    getLog().error(e);
-  }
-  
+ 
   /**
    * Returns true if the setting is in fatal mode. Used when
    * determining if the rule should fail a build.
@@ -148,27 +116,27 @@ public final class ExecutionContext {
    */
   public boolean updatesEnabled() {
       String val = settings.get(Settings.UPDATE_DATABASE);
-      return val != null && val.equalsIgnoreCase(Settings.UPDATES_AUTO);
+      return val != null && 
+          (val.equalsIgnoreCase(Settings.UPDATES_AUTO) ||
+           val.equalsIgnoreCase(Settings.UPDATES_DAILY));
   }
 
-  public boolean isCached(Artifact a){
-    if (cache != null){
-      return cache.isCached(a);
-    } 
-    return false;
+  /**
+   * @return True if daily updates are enabled
+   */
+  public boolean updateDaily() {
+    String val = settings.get(Settings.UPDATE_DATABASE);
+    return val != null && val.equalsIgnoreCase(Settings.UPDATES_DAILY);
   }
   
-  public void cacheArtifact(ArtifactStub a){
-    if (cache != null)
-      cache.put(a);
+  /**
+   * @return True if automatic updates are enabled and run for each enforcer build
+   *
+   */
+  public boolean updateAlways() {
+    String val = settings.get(Settings.UPDATE_DATABASE);
+    return val != null && val.equalsIgnoreCase(Settings.UPDATES_AUTO);
+    
   }
-  
-  public ArtifactStub cachedArtifact(String artifactId){
-    if (cache != null){
-      return (ArtifactStub) cache.get(artifactId);
-    }
-    return null;
-  }
- 
 
 }

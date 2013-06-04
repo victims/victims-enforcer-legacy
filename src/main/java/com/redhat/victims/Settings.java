@@ -44,6 +44,7 @@ public final class Settings {
      * Allow developers to disable automatic updates
      */
     public static final String UPDATES_DISABLED = "offline";
+    public static final String UPDATES_DAILY    = "daily";
     public static final String UPDATES_AUTO     = "auto";
     
     /*

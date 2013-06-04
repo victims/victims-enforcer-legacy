@@ -36,7 +36,7 @@ public class ArtifactStub implements Serializable {
  
   public ArtifactStub(Artifact a){
     
-    artifactId = a.getArtifactId();
+    artifactId = a.getId();
    
     try {
       filename = a.getFile().getCanonicalPath();
@@ -46,9 +46,10 @@ public class ArtifactStub implements Serializable {
     
     cached = new Date();
 
+
   }
   
-  public String getArtifactId() {
+  public String getId() {
     return artifactId;
   }
  

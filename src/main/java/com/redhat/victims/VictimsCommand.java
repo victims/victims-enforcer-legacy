@@ -22,6 +22,7 @@ package com.redhat.victims;
  */
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 
 import org.apache.maven.artifact.Artifact;
@@ -41,7 +42,7 @@ public class VictimsCommand implements Callable<ArtifactStub> {
   public ArtifactStub call() throws Exception {
      
     boolean alreadyReported = false;
-    context.debug("Scanning: " + artifact.toString());
+    context.getLog().debug("Scanning: " + artifact.toString());
     
     VictimsDBInterface db = context.getDatabase();
 
@@ -50,9 +51,9 @@ public class VictimsCommand implements Callable<ArtifactStub> {
       
       String dependency = artifact.getFile().getAbsolutePath();
       for (VictimsRecord vr : VictimsScanner.getRecords(dependency)){
-        for (String cve : db.getVulnerabilities(vr)){
-          vulnerabilityDetected(Settings.FINGERPRINT, cve);
-          alreadyReported = true;
+        HashSet<String> cves = db.getVulnerabilities(vr);
+        if (! cves.isEmpty()){
+          throw new VulnerableArtifactException(artifact, Settings.FINGERPRINT, cves);
         }
       }
     }
@@ -65,38 +66,14 @@ public class VictimsCommand implements Callable<ArtifactStub> {
       gav.put("artifactId", artifact.getArtifactId());
       gav.put("version", artifact.getVersion());
 
-      for (String cve : db.getVulnerabilities(gav)){
-        vulnerabilityDetected(Settings.METADATA, cve);
+      HashSet<String> cves = db.getVulnerabilities(gav);
+      if (! cves.isEmpty()){
+        throw new VulnerableArtifactException(artifact, Settings.METADATA, cves);
       }
-    }
-    
+    } 
     
     return new ArtifactStub(artifact);
     
-  }
-  
-  /**
-   * Action taken when vulnerability detected
-   */
-  private void vulnerabilityDetected(String action, String cve) throws VictimsException {
-
-    // Report finding
-    String logMsg = TextUI.fmt(Resources.INFO_VULNERABLE_DEPENDENCY,
-                        artifact.getArtifactId(),
-                        artifact.getVersion(),
-                        cve.trim());
-
-    TextUI.report(context.getLog(), action, logMsg);
-
-    // Fail if in fatal mode
-    StringBuilder errMsg = new StringBuilder();
-    errMsg.append(TextUI.box(TextUI.fmt(Resources.ERR_VULNERABLE_HEADING)))
-          .append(TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY, cve));
-
-    if (context.inFatalMode(action)){
-      throw new VictimsException(errMsg.toString());
-    }
-
   }
 
 }
