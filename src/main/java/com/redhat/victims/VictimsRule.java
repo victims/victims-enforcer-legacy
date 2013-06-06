@@ -21,9 +21,6 @@ package com.redhat.victims;
  * #L%
  */
 
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -42,6 +40,9 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
+
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 
 
 /**
@@ -142,7 +143,7 @@ public class VictimsRule implements EnforcerRule {
     // Setup cache
     try {
       ctx.setCache(new VictimsResultCache());
-    } catch (IOException e){
+    } catch (VictimsException e){
       log.debug(e);
       throw new EnforcerRuleException(e.getMessage());
     }
@@ -288,10 +289,6 @@ public class VictimsRule implements EnforcerRule {
           }
         }
       }
-      
-    } catch (IOException e){
-      log.debug(e);
-      throw new EnforcerRuleException(e.getMessage());
       
     } catch (VictimsException e) {
       log.debug(e);

@@ -1,27 +1,26 @@
 package com.redhat.victims;
 
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-import com.sun.net.httpserver.Headers;
 import java.io.File;
-import java.io.IOException;
-//import java.util.Calendar;
-//import java.util.Date;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.util.HashSet;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import org.apache.commons.io.FileUtils;
-
-import junit.framework.TestCase;
 
 @SuppressWarnings("restriction")
 public class VictimsRuleTest extends TestCase {
@@ -113,8 +112,8 @@ public class VictimsRuleTest extends TestCase {
     context.setDatabase(database);
     try{
       context.setCache(new VictimsResultCache());
-    } catch(IOException e){
-      fail("Can't create cache");
+    } catch(VictimsException e){
+      fail(e.getMessage());
     }
     contextRunner(context, true);
     
@@ -132,8 +131,8 @@ public class VictimsRuleTest extends TestCase {
     context.setDatabase(database);
     try { 
       context.setCache(new VictimsResultCache());
-    } catch(IOException e){
-      fail("Can't create cache");
+    } catch(VictimsException e){
+      fail(e.getMessage());
     }
     contextRunner(context, false);
   }
