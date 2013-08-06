@@ -24,6 +24,7 @@ package com.redhat.victims;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import org.apache.maven.plugin.logging.Log;
@@ -163,6 +164,31 @@ public final class TextUI {
     return str.substring(0, n).concat("...");
   }
 
+  /** 
+   * Join items with a single space in between them.
+   * @param items The items to be joined together
+   * @return A space separated string of the items
+   */
+  public static String join(Iterable<String> items){
+    return join(items, " ");
+  }
+
+  /** 
+   * Join items using supplied separtor in between
+   * @param items The items to be joined together
+   * @param sep The separator to use to join the items
+   * @return A joined string with each item of items joined
+   * together via the supplied separator. 
+   */
+  public static String join(Iterable<String> items, String sep){
+    StringBuilder sb = new StringBuilder();
+    for (String item : items){
+      sb.append(item);
+      sb.append(sep);
+    }
+    String rv = sb.toString();
+    return rv.substring(0, rv.length() - sep.length());
+  }
 
   /**
    * Formats a message appropriately based on the resource bundle key supplied.

@@ -41,13 +41,16 @@ public class VulnerableArtifactException extends VictimsException {
     
     this.action = action;
       
-    this.infoMessage =
-        TextUI.fmt(Resources.INFO_VULNERABLE_DEPENDENCY, a.getArtifactId(), a.getVersion(),
-            cves.toString());
+    this.infoMessage = TextUI.fmt(Resources.INFO_VULNERABLE_DEPENDENCY, 
+          a.getArtifactId(), a.getVersion(), TextUI.join(cves, ", "));
 
     StringBuilder errMsg = new StringBuilder();
-    errMsg.append(TextUI.box(TextUI.fmt(Resources.ERR_VULNERABLE_HEADING))).append(
-        TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY, cves));
+    errMsg.append(TextUI.box(TextUI.fmt(Resources.ERR_VULNERABLE_HEADING)));
+    errMsg.append(TextUI.fmt(Resources.ERR_VULNERABLE_DEPENDENCY));
+    for (String cve : cves){ 
+      errMsg.append(TextUI.fmt(Resources.ERR_VULNERABLE_CVE_URL, cve));
+      errMsg.append("\n");
+    }
 
     this.errorMessage = errMsg.toString();
     this.cves = cves;

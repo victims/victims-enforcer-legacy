@@ -44,6 +44,8 @@ public class Resources extends ListResourceBundle  {
      */
     public static final String ERR_VULNERABLE_DEPENDENCY    = "ERR_VULNERABLE_DEPENDENCY";
 
+    public static final String ERR_VULNERABLE_CVE_URL       = "ERR_VULNERABLE_CVE_URL";
+    
     /**
      * Heading shown when displaying settings.
      */
@@ -70,7 +72,8 @@ public class Resources extends ListResourceBundle  {
         return new Object[][]{
             { ERR_VULNERABLE_HEADING,       "Vulnerability detected!" },
             { INFO_VULNERABLE_DEPENDENCY,   "The dependency %s-%s matches a vulnerability recorded in the victims database. [%s]"},
-            { ERR_VULNERABLE_DEPENDENCY,    "For more information visit https://access.redhat.com/security/cve/%s"},
+            { ERR_VULNERABLE_DEPENDENCY,    "For more information visit: \n"},
+            { ERR_VULNERABLE_CVE_URL,       "  - https://access.redhat.com/security/cve/%s" }, 
             { INFO_SETTINGS_HEADING,        "victims-enforcer settings"                                         },
             { ERR_INVALID_MODE,             "Invalid mode '%s' for the '%s' setting. Valid options are %s. "    },
             { ERR_SETTING_MISSING,          "Required setting '%s' is missing. "                                },
