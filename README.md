@@ -1,5 +1,6 @@
 # enforce-victims-rule
 
+
 ## About
 
 This rule provides the logic to scan a Maven's project's dependencies against a database of artifacts with publicly known Common Vulnerabilities and Exposures (CVE). The canonical version of the database is hosted at https://victi.ms and is maintained by Red Hat security teams. 
