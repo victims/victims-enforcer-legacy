@@ -55,9 +55,6 @@ import com.redhat.victims.database.VictimsDBInterface;
  */
 public class VictimsRule implements EnforcerRule {
 
-  /** @parameter default-value="${project}" */
-  
-  
   /*
    * Configuration options available in pom.xml
    */
