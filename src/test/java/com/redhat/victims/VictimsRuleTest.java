@@ -12,6 +12,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
@@ -75,9 +76,8 @@ public class VictimsRuleTest extends TestCase {
     
     // Create a dummy artifact
     ArtifactHandler handler = new DefaultArtifactHandler();
-    Artifact testArtifact =
-        new DefaultArtifact("junit", "junit", "3.8.1", "test", "jar", null,
-            handler);
+
+    Artifact testArtifact = new DefaultArtifact("junit", "junit", VersionRange.createFromVersion("3.8.1"), "test", "jar", null, handler);
 
     testArtifact.setFile(new File("testdata", "junit-3.8.1.jar"));
 

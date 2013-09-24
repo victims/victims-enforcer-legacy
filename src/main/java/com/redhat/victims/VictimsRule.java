@@ -55,6 +55,9 @@ import com.redhat.victims.database.VictimsDBInterface;
  */
 public class VictimsRule implements EnforcerRule {
 
+  /** @parameter default-value="${project}" */
+  
+  
   /*
    * Configuration options available in pom.xml
    */
@@ -75,16 +78,23 @@ public class VictimsRule implements EnforcerRule {
    * @param helper
    * @throws EnforcerRuleException
    */
-  public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
 
+  public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
     MavenProject project;
+
     try {
-      project = ((MavenProject) helper.evaluate("${project}")).clone();
+      Object o = helper.evaluate("${project}");
+      project = (MavenProject) o;
+      
+      @SuppressWarnings("unchecked")
+      Set<Artifact> artifacts = project.getArtifacts();
+      
+      execute(setupContext(helper.getLog()), artifacts);
+      
     } catch (ExpressionEvaluationException e) {
-      helper.getLog().debug(e);
-      throw new EnforcerRuleException(e.toString(), e.getCause());
+      helper.getLog().error(e.getCause());
     }
-    execute(setupContext(helper.getLog()), project.getArtifacts());
+          
   }
 
   /**
