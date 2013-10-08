@@ -315,10 +315,11 @@ public class VictimsRule implements EnforcerRule {
         Future<ArtifactStub> result = completionService.poll();
         if (result != null){
           try { 
+            results.remove(result);
             processResult(ctx, result);
           
           } catch (VulnerableArtifactException e){
-            
+           
             if (e.isFatal(ctx)){
               // Cancel other jobs
               for (Future<ArtifactStub> f : results){
