@@ -26,7 +26,15 @@ import java.io.Serializable;
 import java.util.Date;
 import org.apache.maven.artifact.Artifact;
 
+/**
+ * An artifact stub is a serializable container for maven 
+ * artifact information. This is necessary to allow for 
+ * use with the concurrency utilities executors and futures. 
+ * 
+ * @author gm
+ */
 public class ArtifactStub implements Serializable {
+  
 
   private static final long serialVersionUID = 2272353689488498021L;
   
@@ -43,9 +51,7 @@ public class ArtifactStub implements Serializable {
     } catch (IOException e) {
       filename = null;
     }
-    
     cached = new Date();
-
 
   }
   

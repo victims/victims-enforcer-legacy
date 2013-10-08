@@ -29,7 +29,7 @@ import com.redhat.victims.database.VictimsDBInterface;
 /**
  * Context to pass to each command.
  *
- * @author gmurphy
+ * @author gm
  */
 public final class ExecutionContext {
 

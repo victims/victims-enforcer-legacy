@@ -21,6 +21,8 @@ package com.redhat.victims;
  * #L%
  */
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -29,7 +31,14 @@ import org.apache.maven.artifact.Artifact;
 
 import com.redhat.victims.database.VictimsDBInterface;
 
+/**
+ * A callable unit of work that checks an artifacts fingerprint 
+ * and metadata against the victims database.
+ * 
+ * @author gm
+ */
 public class VictimsCommand implements Callable<ArtifactStub> {
+ 
   
   private Artifact artifact;
   private ExecutionContext context;
@@ -39,7 +48,7 @@ public class VictimsCommand implements Callable<ArtifactStub> {
     this.artifact = a;
   }
 
-  public ArtifactStub call() throws Exception {
+  public ArtifactStub call() throws VulnerableArtifactException, VictimsException {
      
     boolean alreadyReported = false;
     context.getLog().debug("Scanning: " + artifact.toString());
@@ -50,7 +59,14 @@ public class VictimsCommand implements Callable<ArtifactStub> {
     if (context.isEnabled(Settings.FINGERPRINT)){
       
       String dependency = artifact.getFile().getAbsolutePath();
-      for (VictimsRecord vr : VictimsScanner.getRecords(dependency)){
+      ArrayList<VictimsRecord> records = null;
+      try {
+        records = VictimsScanner.getRecords(dependency);
+      } catch (IOException e){
+        throw new VictimsException(e.getMessage(), e);
+      }
+      
+      for (VictimsRecord vr : records){
         HashSet<String> cves = db.getVulnerabilities(vr);
         if (! cves.isEmpty()){
           throw new VulnerableArtifactException(artifact, Settings.FINGERPRINT, cves);

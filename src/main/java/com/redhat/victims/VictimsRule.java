@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorCompletionService;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
@@ -113,7 +114,6 @@ public class VictimsRule implements EnforcerRule {
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
    
-    // Setup database 
     if (baseUrl != null){
       System.setProperty(VictimsConfig.Key.URI, baseUrl);
       ctx.getSettings().set(VictimsConfig.Key.URI, baseUrl);
@@ -178,7 +178,6 @@ public class VictimsRule implements EnforcerRule {
     VictimsDBInterface db = ctx.getDatabase();
     Log log = ctx.getLog();
     
-    
     Date updated = db.lastUpdated(); 
     
     // update automatically every time
@@ -207,6 +206,60 @@ public class VictimsRule implements EnforcerRule {
     }
     
   }
+  
+
+  /**
+   * This is a helper method that processes a single result that 
+   * has been executed. 
+   * 
+   * If any exceptions were thrown during execution they are inspected
+   * to see if they indicate a vulnerable artifact. The result is also 
+   * added to the cache for the current execution context.  
+   * 
+   * 
+   * @param ctx - The execution context the result was generated under
+   * @param result - The result to examine
+   * @throws VictimsException
+   * @throws VulnerableArtifactException
+   * @throws EnforcerRuleException
+   */
+  private void processResult(ExecutionContext ctx, Future<ArtifactStub> result) 
+      throws VictimsException, VulnerableArtifactException, EnforcerRuleException  {
+    
+    VictimsResultCache cache = ctx.getCache();
+    Log log = ctx.getLog();
+    
+    try {
+      
+      ArtifactStub checked = result.get();
+      if (checked != null){
+        log.debug("Done: " + checked.getId());
+        cache.add(checked.getId(), null);
+      }
+      
+    } catch (InterruptedException e){
+      log.info(e.getMessage());
+    
+    } catch (ExecutionException e){
+      
+      log.debug(e);
+      Throwable cause = e.getCause();
+      
+      if (cause instanceof VulnerableArtifactException){
+        
+        VulnerableArtifactException ve = (VulnerableArtifactException) cause;
+        // cache vulnerable artifact
+        cache.add(ve.getId(), ve.getVulnerabilites());
+        
+        // Log the error and rethrow in case a fatal error
+        log.info(ve.getLogMessage());
+        throw ve;
+
+      } else { 
+        throw new EnforcerRuleException(e.getCause().getMessage());
+      }
+    }
+  }
 
   /**
    * Scan the supplied artifacts given the provided execution context. An
@@ -221,7 +274,8 @@ public class VictimsRule implements EnforcerRule {
     Log log = ctx.getLog();
     int cores = Runtime.getRuntime().availableProcessors();
     ExecutorService executor = null;
-    List<Future<ArtifactStub>> jobs = null; 
+    ExecutorCompletionService<ArtifactStub> completionService = null;
+    List<Future<ArtifactStub>> results = null; 
     
     try {
       
@@ -230,7 +284,9 @@ public class VictimsRule implements EnforcerRule {
       
       // Concurrently process each dependency 
       executor = Executors.newFixedThreadPool(cores);
-      jobs = new ArrayList<Future<ArtifactStub>>();
+      completionService = new ExecutorCompletionService<ArtifactStub>(executor);
+      
+      results = new ArrayList<Future<ArtifactStub>>();
       
       for (Artifact a : artifacts){
            
@@ -252,50 +308,40 @@ public class VictimsRule implements EnforcerRule {
         }
             
         // Not in cache process artifact
-        Callable<ArtifactStub> worker = new VictimsCommand(ctx, a);
-        jobs.add(executor.submit(worker));    
+        results.add(completionService.submit(new VictimsCommand(ctx, a)));    
+        
+        // Poll completion service for completed tasks to short circuit
+        // on failure conditions.
+        Future<ArtifactStub> result = completionService.poll();
+        if (result != null){
+          try { 
+            processResult(ctx, result);
+          
+          } catch (VulnerableArtifactException e){
+            
+            if (e.isFatal(ctx)){
+              // Cancel other jobs
+              for (Future<ArtifactStub> f : results){
+                f.cancel(true);
+              }
+              throw new EnforcerRuleException(e.getErrorMessage(), e);
+            }
+          }
+        }
       
       }
       executor.shutdown();
       
-      // Cache results or report failure of command 
-      for (Future<ArtifactStub> future : jobs){
-        
-        try {
-          
-          ArtifactStub checked = future.get();
-          if (checked != null){
-            log.debug("Done: " + checked.getId());
-            cache.add(checked.getId(), null);
-          }
-          
-        } catch (InterruptedException e){
-          log.info(e.getMessage());
-        
-        } catch (ExecutionException e){
-          
-          log.debug(e);
-          Throwable cause = e.getCause();
-          
-          if (cause instanceof VulnerableArtifactException){
-            
-            VulnerableArtifactException ve = (VulnerableArtifactException) cause;
-            // cache vulnerable artifact
-            cache.add(ve.getId(), ve.getVulnerabilites());
-            
-            // log error
-            log.info(ve.getLogMessage());
-
-            // fatal exception
-            if (ve.isFatal(ctx)){
-              throw new EnforcerRuleException(ve.getErrorMessage());
-            }
-           
-          } else { 
-            throw new EnforcerRuleException(e.getCause().getMessage());
-          }
-        }
+      // Process any remaining results. 
+      for (Future<ArtifactStub> future : results){
+        processResult(ctx, future); 
       }
+      
+    } catch (VulnerableArtifactException e){
+        // fatal exception
+        if (e.isFatal(ctx)){
+          throw new EnforcerRuleException(e.getErrorMessage());
+        }
       
     } catch (VictimsException e) {
       log.debug(e);
@@ -305,6 +351,7 @@ public class VictimsRule implements EnforcerRule {
       
       if (executor != null){
         executor.shutdownNow();
+       
       }
     }
   }

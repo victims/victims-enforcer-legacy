@@ -25,7 +25,7 @@ import java.util.ListResourceBundle;
 
 /**
  * Basic resource bundle for messages and formating.
- * @author gmurphy
+ * @author gm
  */
 public class Resources extends ListResourceBundle  {
 

@@ -30,7 +30,7 @@ import org.apache.maven.plugin.logging.Log;
  * Configuration settings are defined and stored by this class. All settings of
  * the VictimsRule are validated and initialized with defaults from this class.
  *
- * @author gmurphy
+ * @author gm
  */
 public final class Settings {
 
@@ -41,16 +41,13 @@ public final class Settings {
     public static final String MODE_FATAL       = "fatal";
     public static final String MODE_DISABLED    = "disabled";
     /*
-     * Allow developers to disable automatic updates
+     * Allow developers to disable automatic updates or
+     * only update once per day.
      */
     public static final String UPDATES_DISABLED = "offline";
     public static final String UPDATES_DAILY    = "daily";
     public static final String UPDATES_AUTO     = "auto";
     
-    /*
-     * The cache region to use with JCS 
-     */
-    public static final String CACHE_REGION_NAME = "default";
     
     /*
      * Different settings that can be configured. These need to map back to the
@@ -61,7 +58,6 @@ public final class Settings {
     public static final String METADATA         = "metadata";
     public static final String FINGERPRINT      = "fingerprint";
     public static final String UPDATE_DATABASE  = "updates";
-    public static final String CACHE_SETTINGS   = "cacheConfig";
 
     /**
      * Reasonably sensible defaults

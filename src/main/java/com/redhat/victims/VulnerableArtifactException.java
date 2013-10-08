@@ -25,9 +25,14 @@ import java.util.HashSet;
 
 import org.apache.maven.artifact.Artifact;
 
+/**
+ * This exception indicates that an artifact matches a record within the 
+ * Victims vulnerability database. 
+ * 
+ * @author gm
+ */
 public class VulnerableArtifactException extends VictimsException {
 
-   
   private static final long serialVersionUID = 3584021685052005272L;
   private String infoMessage;
   private String errorMessage;

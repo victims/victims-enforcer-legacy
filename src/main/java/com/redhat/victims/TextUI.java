@@ -33,7 +33,7 @@ import org.apache.maven.plugin.logging.Log;
  * A collection of miscellaneous utilities used throughout the plug-in to format
  * output.
  * 
- * @author gmurphy
+ * @author gm
  */
 public final class TextUI {
 
