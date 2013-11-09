@@ -81,11 +81,21 @@ public class VictimsRule implements EnforcerRule {
     MavenProject project;
 
     try {
+
+      // Get all artifacts for root project
       Object o = helper.evaluate("${project}");
       project = (MavenProject) o;
-      
+
       @SuppressWarnings("unchecked")
       Set<Artifact> artifacts = project.getArtifacts();
+      helper.getLog().debug("Base pom.xml artifacts - " + artifacts.size());
+
+      // Add reactor artifacts
+      List<MavenProject> reactorProjects = (List<MavenProject>)helper.evaluate("${reactorProjects}");
+      for (MavenProject rp: reactorProjects){
+        artifacts.addAll(rp.getArtifacts());
+      }
+      helper.getLog().debug("With reactor project artifacts - " + artifacts.size());
       
       execute(setupContext(helper.getLog()), artifacts);
       
