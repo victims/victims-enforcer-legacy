@@ -148,11 +148,11 @@ def main():
         src.extractall()
 
     # Enter the latest victims  (overwrite pom.xml)
+    mvn = install_maven()
     if os.path.exists(pomfile):
         patch_pom(pomfile, pomfile, version)
         os.chdir(srcdir)
 
-        mvn = install_maven()
         buildcmd = "../{} package -X -Dmaven.test.skip=True".format(mvn)
         rc = subprocess.call(buildcmd.split(" "))
         os.chdir("..")
