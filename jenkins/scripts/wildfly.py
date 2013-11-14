@@ -22,7 +22,7 @@ def download_source(url, output):
         while True:
             chunk = rsp.read(chunk_size)
             if not chunk: 
-                print("done.")
+                print("\nok")
                 break
 
             f.write(chunk)
@@ -30,9 +30,7 @@ def download_source(url, output):
             sys.stdout.write("{}/{} KiB \r".format(saved//1024, total//1024))
 
 
-def inject_config(elem):
-
-    # Yes.. this seems like a good way to do things... O_o
+def inject_config(elem, versionString):
 
     # <plugin>
     plugin = ET.SubElement(elem, ns("plugin"))
@@ -64,7 +62,7 @@ def inject_config(elem):
 
     #           <version>?</version>
     victimsVersion = ET.SubElement(dependency, ns("version"))
-    victimsVersion.text = "1.3.2-SNAPSHOT"
+    victimsVersion.text = versionString
     #       </dependency>
     #   </dependencies>
 
@@ -116,7 +114,7 @@ def inject_config(elem):
 
 
 
-def patch_pom(filename, target):
+def patch_pom(filename, target, version):
 
     # Warning - assumes victims configuration doesn't exist
     # in pom file already.
@@ -124,7 +122,7 @@ def patch_pom(filename, target):
     doc = ET.parse(filename)
     build = doc.getroot().find(ns("build"))
     plugins = build.find(ns("plugins"))
-    inject_config(plugins)
+    inject_config(plugins, version)
     doc.write(target)
 
 
@@ -136,6 +134,9 @@ def main():
     pomfile     = "wildfly-master/pom.xml"
     srcdir      = "wildfly-master"
     buildcmd    = "mvn package -X -Dmaven.test.skip=True"
+    version     = sys.argv[1:]
+    if not version:
+        version = "1.3.2-SNAPSHOT"
 
     if not os.path.exists(output):
         download_source(url, output)
@@ -146,18 +147,20 @@ def main():
         src.extractall()
 
     # Enter the latest victims  (overwrite pom.xml)
-    patch_pom(pomfile, pomfile)
+    patch_pom(pomfile, pomfile, version)
 
     # Kickoff the build
     os.chdir(srcdir)
     rc = subprocess.call(buildcmd.split(" "))
-
-    # Cleanup
     os.chdir("..")
-    shutil.rmtree(srcdir)
-    os.remove(output)
+
+    # Cleanup (for clean exit)
+    if rc == 0: 
+        shutil.rmtree(srcdir)
+        os.remove(output)
     
     # Exit with maven return code
+    print("exit({})".format(rc))
     sys.exit(rc)
 
 if __name__ == "__main__":
