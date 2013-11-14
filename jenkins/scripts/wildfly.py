@@ -21,7 +21,7 @@ def install_maven():
         zipfile.ZipFile("maven.zip").extractall()
 
     os.chmod("apache-maven-3.1.1/bin/mvn", 0o755)
-    return "../apache-maven-3.1.1/bin/mvn"
+    return os.path.join(os.getcwd(), "apache-maven-3.1.1/bin/mvn")
 
 
 def download_source(url, output):
