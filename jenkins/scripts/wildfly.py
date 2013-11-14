@@ -151,7 +151,7 @@ def main():
     version = sys.argv[1:]
     if not version:
         if not os.path.exists("target/classes/version.txt"):
-            subprocess.call("mvn install -Dmaven.test.skip=true".split(" "))
+            subprocess.call("{} install -Dmaven.test.skip=true".format(mvn).split(" "))
 
         version = open("target/classes/version.txt").read().strip()
 
