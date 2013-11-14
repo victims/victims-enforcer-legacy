@@ -1,33 +1,34 @@
 #!/usr/bin/env python
 import os
 import sys
-import urllib2
+import urllib.request
 import shutil
 import zipfile
 import xml.etree.ElementTree as ET
 import subprocess
 
+__MAVEN_URL = "http://apache.mirror.uber.com.au/maven/maven-3/3.1.1/binaries/apache-maven-3.1.1-bin.zip"
+
 def ns(tag):
     return "{{http://maven.apache.org/POM/4.0.0}}{}".format(tag)
 
+def install_maven():
+
+    if not os.path.exists("apache-maven-3.1.1/bin/mvn"):
+        if not os.path.exists("maven.zip"):
+            tempfile, headers = urllib.request.urlretrieve(__MAVEN_URL)
+            shutil.move(tempfile, "maven.zip")
+        zipfile.ZipFile("maven.zip").extractall()
+
+    os.chmod("apache-maven-3.1.1/bin/mvn", 0o755)
+    return "apache-maven-3.1.1/bin/mvn"
+
+
 def download_source(url, output):
 
-    print("Downloading latest source from {}".format(url))
-    chunk_size = 1024 
-    rsp = urllib2.urlopen(url)
-    total = int(rsp.info().getheader("Content-Length").strip())
-
-    with open(output, "wb") as f:
-        saved = 0
-        while True:
-            chunk = rsp.read(chunk_size)
-            if not chunk: 
-                print("\nok")
-                break
-
-            f.write(chunk)
-            saved += len(chunk)
-            sys.stdout.write("{}/{} KiB \r".format(saved//1024, total//1024))
+    print("Downloading {}".format(url))
+    tempfile, headers = urllib.request.urlretrieve(url)
+    shutil.copy(tempfile, output)
 
 
 def inject_config(elem, versionString):
@@ -133,10 +134,10 @@ def main():
     output      = "source.zip"
     pomfile     = "wildfly-master/pom.xml"
     srcdir      = "wildfly-master"
-    buildcmd    = "mvn package -X -Dmaven.test.skip=True"
     version     = sys.argv[1:]
     if not version:
         version = "1.3.2-SNAPSHOT"
+
 
     if not os.path.exists(output):
         download_source(url, output)
@@ -147,12 +148,14 @@ def main():
         src.extractall()
 
     # Enter the latest victims  (overwrite pom.xml)
-    patch_pom(pomfile, pomfile, version)
+    if os.path.exists(pomfile):
+        patch_pom(pomfile, pomfile, version)
+        os.chdir(srcdir)
 
-    # Kickoff the build
-    os.chdir(srcdir)
-    rc = subprocess.call(buildcmd.split(" "))
-    os.chdir("..")
+        mvn = install_maven()
+        buildcmd = "../{} package -X -Dmaven.test.skip=True".format(mvn)
+        rc = subprocess.call(buildcmd.split(" "))
+        os.chdir("..")
 
     # Cleanup (for clean exit)
     if rc == 0: 
