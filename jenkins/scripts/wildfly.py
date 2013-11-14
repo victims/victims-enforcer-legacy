@@ -21,7 +21,7 @@ def install_maven():
         zipfile.ZipFile("maven.zip").extractall()
 
     os.chmod("apache-maven-3.1.1/bin/mvn", 0o755)
-    return "apache-maven-3.1.1/bin/mvn"
+    return "../apache-maven-3.1.1/bin/mvn"
 
 
 def download_source(url, output):
@@ -134,11 +134,6 @@ def main():
     output      = "source.zip"
     pomfile     = "wildfly-master/pom.xml"
     srcdir      = "wildfly-master"
-    version     = sys.argv[1:]
-    if not version:
-        version = "1.3.2-SNAPSHOT"
-
-
     if not os.path.exists(output):
         download_source(url, output)
     
@@ -147,13 +142,25 @@ def main():
         src = zipfile.ZipFile(output)
         src.extractall()
 
+    # Figure out a version of maven to use
+    mvn = "mvn"
+    if not shutil.which("mvn"):
+        mvn = install_maven()
+
+    # Make sure the latest victims enforcer plugin is built
+    version = sys.argv[1:]
+    if not version:
+        if not os.path.exists("target/classes/version.txt"):
+            subprocess.call("mvn install -Dmaven.test.skip=true".split(" "))
+
+        version = open("target/classes/version.txt").read().strip()
+
     # Enter the latest victims  (overwrite pom.xml)
-    mvn = install_maven()
     if os.path.exists(pomfile):
         patch_pom(pomfile, pomfile, version)
         os.chdir(srcdir)
 
-        buildcmd = "../{} package -X -Dmaven.test.skip=True".format(mvn)
+        buildcmd = "{} package -X -Dmaven.test.skip=true".format(mvn)
         rc = subprocess.call(buildcmd.split(" "))
         os.chdir("..")
 
