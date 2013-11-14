@@ -88,7 +88,7 @@ def inject_config(elem, versionString):
     config = ET.SubElement(execution, ns("configuration"))
 
     #               <rules>
-    rules = ET.SubElement(config, ns("execution"))
+    rules = ET.SubElement(config, ns("rules"))
 
     #                   <rule implementation="com.redhat.victims.VictimsRule">
     rule = ET.SubElement(rules, ns("rule"))
