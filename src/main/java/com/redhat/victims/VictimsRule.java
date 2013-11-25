@@ -262,7 +262,7 @@ public class VictimsRule implements EnforcerRule {
         cache.add(ve.getId(), ve.getVulnerabilites());
         
         // Log the error and rethrow in case a fatal error
-        log.info(ve.getLogMessage());
+        log.warn(ve.getLogMessage());
         throw ve;
 
       } else { 
@@ -308,7 +308,7 @@ public class VictimsRule implements EnforcerRule {
           if (! cves.isEmpty()){
             
             VulnerableArtifactException err = new VulnerableArtifactException(a, Settings.FINGERPRINT, cves);
-            log.info(err.getLogMessage());
+            log.warn(err.getLogMessage());
             
             if (err.isFatal(ctx)){
               throw new EnforcerRuleException(err.getErrorMessage());
