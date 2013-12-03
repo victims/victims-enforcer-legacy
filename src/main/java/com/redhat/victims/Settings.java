@@ -48,6 +48,11 @@ public final class Settings {
     public static final String UPDATES_DAILY    = "daily";
     public static final String UPDATES_AUTO     = "auto";
     
+    /* Use system proxy configuration for connections by default */
+    public static final String SYSTEM_PROXY_ENABLED = "true";
+    
+    /* Default setting for TLS SNI */
+    public static final String TLS_SNI_ENABLED  = "false";
     
     /*
      * Different settings that can be configured. These need to map back to the
@@ -58,11 +63,15 @@ public final class Settings {
     public static final String METADATA         = "metadata";
     public static final String FINGERPRINT      = "fingerprint";
     public static final String UPDATE_DATABASE  = "updates";
+    public static final String SYSTEM_PROXY     = "system-proxy";
+    public static final String TLS_SNI          = "tls-sni";
 
     /**
      * Reasonably sensible defaults
      */
     public static final Map<String, String> defaults;
+
+   
 
 
     static {
@@ -71,6 +80,8 @@ public final class Settings {
         mappings.put(METADATA, MODE_WARNING);
         mappings.put(FINGERPRINT, MODE_FATAL);
         mappings.put(UPDATE_DATABASE, UPDATES_AUTO);
+        mappings.put(SYSTEM_PROXY, SYSTEM_PROXY);
+        mappings.put(TLS_SNI, TLS_SNI_ENABLED);
       
         defaults = Collections.unmodifiableMap(mappings);
     }

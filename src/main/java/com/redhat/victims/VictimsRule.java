@@ -62,13 +62,19 @@ public class VictimsRule implements EnforcerRule {
   private String metadata = Settings.defaults.get(Settings.METADATA);
   private String fingerprint = Settings.defaults.get(Settings.FINGERPRINT);
   private String updates = Settings.defaults.get(Settings.UPDATE_DATABASE);
+  private String useSystemProxies = Settings.defaults.get(Settings.SYSTEM_PROXY);
+  private String useServerNameIndication = Settings.defaults.get(Settings.TLS_SNI);
+  private String httpProxyHost = null;
+  private String httpProxyPort = null;
+  private String httpsProxyHost = null;
+  private String httpsProxyPort = null;
   private String baseUrl = null;
   private String entryPoint = null;
   private String jdbcDriver = null;
   private String jdbcUrl = null;
   private String jdbcUser = null;
   private String jdbcPass = null;
-
+  
 
   /**
    * Main entry point for the enforcer rule.
@@ -123,7 +129,21 @@ public class VictimsRule implements EnforcerRule {
     
     // Only need to query using one hashing mechanism
     System.setProperty(VictimsConfig.Key.ALGORITHMS, "SHA512");
-   
+    
+      
+    if (useSystemProxies != null){
+        System.setProperty("java.net.useSystemProxies", useSystemProxies);
+    }
+    
+    if (httpsProxyHost != null && httpsProxyPort != null){
+        System.setProperty("https.proxyHost", httpsProxyHost);
+        System.setProperty("https.proxyPort", httpsProxyPort);
+    }
+    if (httpProxyHost != null && httpProxyPort != null){
+        System.setProperty("http.proxyHost", httpProxyHost);
+        System.setProperty("http.proxyPort", httpProxyPort);
+    }
+    
     if (baseUrl != null){
       System.setProperty(VictimsConfig.Key.URI, baseUrl);
       ctx.getSettings().set(VictimsConfig.Key.URI, baseUrl);
