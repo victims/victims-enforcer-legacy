@@ -23,31 +23,15 @@ package com.redhat.victims;
 
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.artifact.filter.ScopeArtifactFilter;
-import org.apache.maven.shared.dependency.tree.DependencyNode;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
-import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
-import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
 
 
 /**
@@ -73,14 +57,7 @@ public class VictimsRule implements EnforcerRule {
   private String jdbcUser = null;
   private String jdbcPass = null;
   
-  /* 
-   * Maven plugin and dependency resolution 
-   */ 
-  private ArtifactRepository localRepository; 
-  private DependencyTreeBuilder treeBuilder;
-  private MavenProject project;
-  
-  
+
   /**
    * Main entry point for the enforcer rule.
    *
@@ -90,60 +67,24 @@ public class VictimsRule implements EnforcerRule {
 
   public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
 
-    try {
-      
-      project = (MavenProject) helper.evaluate("${project}");
-      localRepository = (ArtifactRepository) helper.evaluate("${localRepository}");
-      treeBuilder = (DependencyTreeBuilder) helper.getComponent(DependencyTreeBuilder.class);
-      
-      // Query maven project dependency tree
       HashSet<Artifact> artifacts = new HashSet<Artifact>();
-    
-      ScopeArtifactFilter filter = new ScopeArtifactFilter();
-      filter.setIncludeRuntimeScopeWithImplications(true); // compile runtime
-      
-      DependencyNode treeRoot = treeBuilder.buildDependencyTree(project, localRepository, filter);
-      helper.getLog().debug("[victims-enforcer] artifact id of root = "  + treeRoot.getArtifact().toString());
-      CollectingDependencyNodeVisitor visitor = new CollectingDependencyNodeVisitor();
-      treeRoot.accept(visitor);
-      
-      for (DependencyNode node : visitor.getNodes()){
-        if (node.getState() == DependencyNode.INCLUDED && ! treeRoot.equals(node)){ 
-          Artifact artifact = node.getArtifact();
-          if (artifact != null){ 
-            artifacts.add(artifact);
-            helper.getLog().debug("[victims-enforcer] adding dependency " + artifact.toString());
+      ArtifactCollector[] collectors = {
+              new DependencyTreeCollector(),
+              new ReactorCollector(),
+              new BaseArtifactCollector()
+      };
+
+      for (ArtifactCollector collector : collectors ){
+          try {
+              artifacts.addAll(collector.with(helper).getArtifacts());
+          } catch (Exception e) {
+              // Expect failures for API incompatabilities
+              helper.getLog().debug(e.toString());
           }
-        }
       }
-     
-      // Add reactor artifacts
-      List<MavenProject> reactorProjects = (List<MavenProject>)helper.evaluate("${reactorProjects}");
-      for (MavenProject rp: reactorProjects){
-        Artifact[] reactorArtifacts = new Artifact[rp.getArtifacts().size()];
-        rp.getArtifacts().toArray(reactorArtifacts);
-        for (Artifact artifact : reactorArtifacts){
-          if (artifact != null){
-            artifacts.add(artifact);
-            helper.getLog().debug("[victims-enforcer] adding reactor dependency " + artifact.toString());
-          }
-        }
-      }
-      
-      // Execute based on these lists of projects
+
       execute(setupContext(helper.getLog()), artifacts);
-      
-    } catch (ExpressionEvaluationException e) {
-      helper.getLog().error("Unable to evaluate project properties");
-      helper.getLog().error(e.getCause());
-    } catch (ComponentLookupException e) {
-      helper.getLog().error("Unable to resolve project dependencies");
-      helper.getLog().error(e.getCause());
-    } catch (DependencyTreeBuilderException e) {
-      helper.getLog().error("Unable to analyze project dependencies");
-      helper.getLog().error(e.getCause());
-    }
-          
+
   }
 
   /**
