@@ -84,8 +84,13 @@ public class VictimsRuleTest extends TestCase {
     HashSet<Artifact> artifacts = new HashSet<Artifact>();
     artifacts.add(testArtifact);
 
-    // Overwrite the victims url
+    // Overwrite the default victims settings
     System.setProperty(VictimsConfig.Key.URI, "http://localhost:1337");
+    File tmpdir = new File(System.getProperty("java.io.tmpdir"), "victims_enforcer_test");
+    System.setProperty(VictimsConfig.Key.DB_URL, String.format("jdbc:h2:%s;MVCC=true", tmpdir.getAbsolutePath()));
+    System.err.println(System.getProperty(VictimsConfig.Key.DB_URL));
+    System.setProperty(VictimsConfig.Key.PURGE_CACHE, "true");
+    System.setProperty(VictimsConfig.Key.DB_PURGE, "true");
     
     VictimsRule enforcer = new VictimsRule();
     try {

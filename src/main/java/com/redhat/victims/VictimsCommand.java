@@ -51,17 +51,16 @@ public class VictimsCommand implements Callable<ArtifactStub> {
   public ArtifactStub call() throws VulnerableArtifactException, VictimsException {
      
     boolean alreadyReported = false;
-    context.getLog().debug("Scanning: " + artifact.toString());
+    context.getLog().debug("[victims-enforcer] scanning: " + artifact.toString());
     
     VictimsDBInterface db = context.getDatabase();
 
     // fingerprint
     if (context.isEnabled(Settings.FINGERPRINT)){
       
-      String dependency = artifact.getFile().getAbsolutePath();
       ArrayList<VictimsRecord> records = null;
       try {
-        records = VictimsScanner.getRecords(dependency);
+        records = VictimsScanner.getRecords(artifact.getFile().getAbsolutePath());
       } catch (IOException e){
         throw new VictimsException(e.getMessage(), e);
       }

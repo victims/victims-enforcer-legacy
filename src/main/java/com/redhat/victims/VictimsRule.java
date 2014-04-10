@@ -21,29 +21,33 @@ package com.redhat.victims;
  * #L%
  */
 
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ExecutorCompletionService;
-
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.artifact.filter.ScopeArtifactFilter;
+import org.apache.maven.shared.dependency.tree.DependencyNode;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
+import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
-
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
 
 /**
@@ -68,8 +72,15 @@ public class VictimsRule implements EnforcerRule {
   private String jdbcUrl = null;
   private String jdbcUser = null;
   private String jdbcPass = null;
-
-
+  
+  /* 
+   * Maven plugin and dependency resolution 
+   */ 
+  private ArtifactRepository localRepository; 
+  private DependencyTreeBuilder treeBuilder;
+  private MavenProject project;
+  
+  
   /**
    * Main entry point for the enforcer rule.
    *
@@ -78,28 +89,58 @@ public class VictimsRule implements EnforcerRule {
    */
 
   public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
-    MavenProject project;
 
     try {
-
-      // Get all artifacts for root project
-      Object o = helper.evaluate("${project}");
-      project = (MavenProject) o;
-
-      @SuppressWarnings("unchecked")
-      Set<Artifact> artifacts = project.getArtifacts();
-      helper.getLog().debug("Base pom.xml artifacts - " + artifacts.size());
-
+      
+      project = (MavenProject) helper.evaluate("${project}");
+      localRepository = (ArtifactRepository) helper.evaluate("${localRepository}");
+      treeBuilder = (DependencyTreeBuilder) helper.getComponent(DependencyTreeBuilder.class);
+      
+      // Query maven project dependency tree
+      HashSet<Artifact> artifacts = new HashSet<Artifact>();
+    
+      ScopeArtifactFilter filter = new ScopeArtifactFilter();
+      filter.setIncludeRuntimeScopeWithImplications(true); // compile runtime
+      
+      DependencyNode treeRoot = treeBuilder.buildDependencyTree(project, localRepository, filter);
+      helper.getLog().debug("[victims-enforcer] artifact id of root = "  + treeRoot.getArtifact().toString());
+      CollectingDependencyNodeVisitor visitor = new CollectingDependencyNodeVisitor();
+      treeRoot.accept(visitor);
+      
+      for (DependencyNode node : visitor.getNodes()){
+        if (node.getState() == DependencyNode.INCLUDED && ! treeRoot.equals(node)){ 
+          Artifact artifact = node.getArtifact();
+          if (artifact != null){ 
+            artifacts.add(artifact);
+            helper.getLog().debug("[victims-enforcer] adding dependency " + artifact.toString());
+          }
+        }
+      }
+     
       // Add reactor artifacts
       List<MavenProject> reactorProjects = (List<MavenProject>)helper.evaluate("${reactorProjects}");
       for (MavenProject rp: reactorProjects){
-        artifacts.addAll(rp.getArtifacts());
+        Artifact[] reactorArtifacts = new Artifact[rp.getArtifacts().size()];
+        rp.getArtifacts().toArray(reactorArtifacts);
+        for (Artifact artifact : reactorArtifacts){
+          if (artifact != null){
+            artifacts.add(artifact);
+            helper.getLog().debug("[victims-enforcer] adding reactor dependency " + artifact.toString());
+          }
+        }
       }
-      helper.getLog().debug("With reactor project artifacts - " + artifacts.size());
       
+      // Execute based on these lists of projects
       execute(setupContext(helper.getLog()), artifacts);
       
     } catch (ExpressionEvaluationException e) {
+      helper.getLog().error("Unable to evaluate project properties");
+      helper.getLog().error(e.getCause());
+    } catch (ComponentLookupException e) {
+      helper.getLog().error("Unable to resolve project dependencies");
+      helper.getLog().error(e.getCause());
+    } catch (DependencyTreeBuilderException e) {
+      helper.getLog().error("Unable to analyze project dependencies");
       helper.getLog().error(e.getCause());
     }
           
@@ -207,12 +248,12 @@ public class VictimsRule implements EnforcerRule {
         db.synchronize();
         
       } else {
-        log.debug("Database last synchronized: " + updated.toString());
+        log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
       }
       
     // updates disabled 
     } else {
-      log.debug("Database synchronization disabled.");
+      log.debug("[victims-enforcer] database synchronization disabled.");
     }
     
   }
@@ -243,7 +284,7 @@ public class VictimsRule implements EnforcerRule {
       
       ArtifactStub checked = result.get();
       if (checked != null){
-        log.debug("Done: " + checked.getId());
+        log.debug("[victims-enforcer] done: " + checked.getId());
         cache.add(checked.getId(), null);
       }
       
@@ -304,7 +345,7 @@ public class VictimsRule implements EnforcerRule {
         if (cache.exists(a.getId())){
           
           HashSet<String> cves = cache.get(a.getId());
-          log.debug("Cached: " + a.getId());
+          log.debug("[victims-enforcer] cached: " + a.getId());
           if (! cves.isEmpty()){
             
             VulnerableArtifactException err = new VulnerableArtifactException(a, Settings.FINGERPRINT, cves);
