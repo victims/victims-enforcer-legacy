@@ -21,15 +21,15 @@ package com.redhat.victims;
  * #L%
  */
 
+import com.redhat.victims.database.VictimsDBInterface;
+import org.apache.maven.artifact.Artifact;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
-
-import org.apache.maven.artifact.Artifact;
-
-import com.redhat.victims.database.VictimsDBInterface;
 
 /**
  * A callable unit of work that checks an artifacts fingerprint 
@@ -60,16 +60,22 @@ public class VictimsCommand implements Callable<ArtifactStub> {
       
       ArrayList<VictimsRecord> records = null;
       try {
-        records = VictimsScanner.getRecords(artifact.getFile().getAbsolutePath());
+
+          File localFile = artifact.getFile();
+          if (localFile != null) {
+              records = VictimsScanner.getRecords(localFile.getAbsolutePath());
+          }
+
       } catch (IOException e){
         throw new VictimsException(e.getMessage(), e);
       }
-      
-      for (VictimsRecord vr : records){
-        HashSet<String> cves = db.getVulnerabilities(vr);
-        if (! cves.isEmpty()){
-          throw new VulnerableArtifactException(artifact, Settings.FINGERPRINT, cves);
-        }
+      if (records != null) {
+          for (VictimsRecord vr : records) {
+              HashSet<String> cves = db.getVulnerabilities(vr);
+              if (!cves.isEmpty()) {
+                  throw new VulnerableArtifactException(artifact, Settings.FINGERPRINT, cves);
+              }
+          }
       }
     }
     

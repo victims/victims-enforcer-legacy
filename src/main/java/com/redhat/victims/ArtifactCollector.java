@@ -61,9 +61,14 @@ class BaseArtifactCollector implements ArtifactCollector {
     protected void gatherArtifacts() {
 
         for (Object a : project.getArtifacts()){
-            Artifact artifact = (Artifact) a;
-            artifacts.add(artifact);
-            helper.getLog().debug("[victims-enforcer] adding project dependency " + artifact.toString());
+
+            if (a instanceof Artifact) {
+                Artifact artifact = (Artifact) a;
+                artifacts.add(artifact);
+                helper.getLog().debug("[victims-enforcer] adding project dependency " + artifact.toString());
+            }
+
+
         }
     }
 

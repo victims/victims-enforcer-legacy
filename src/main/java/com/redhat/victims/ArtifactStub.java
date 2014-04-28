@@ -21,10 +21,12 @@ package com.redhat.victims;
  * #L%
  */
 
+import org.apache.maven.artifact.Artifact;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
-import org.apache.maven.artifact.Artifact;
 
 /**
  * An artifact stub is a serializable container for maven 
@@ -47,7 +49,10 @@ public class ArtifactStub implements Serializable {
     artifactId = a.getId();
    
     try {
-      filename = a.getFile().getCanonicalPath();
+      File f = a.getFile();
+      if (f != null) {
+        filename = a.getFile().getCanonicalPath();
+      }
     } catch (IOException e) {
       filename = null;
     }
