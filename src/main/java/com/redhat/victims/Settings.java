@@ -21,9 +21,10 @@ package com.redhat.victims;
  * #L%
  */
 
+import org.apache.maven.plugin.logging.Log;
+
 import java.util.*;
 import java.util.Map.Entry;
-import org.apache.maven.plugin.logging.Log;
 
 
 /**
@@ -46,7 +47,12 @@ public final class Settings {
      */
     public static final String UPDATES_DISABLED = "offline";
     public static final String UPDATES_DAILY    = "daily";
+    public static final String UPDATES_WEEKLY   = "weekly";
     public static final String UPDATES_AUTO     = "auto";
+
+    /** System property used to disable update mechanism from the command line */
+    public static final String UPDATES_OVERRIDE = "victims.skip.update";
+
     
     
     /*

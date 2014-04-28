@@ -128,7 +128,15 @@ public final class ExecutionContext {
     String val = settings.get(Settings.UPDATE_DATABASE);
     return val != null && val.equalsIgnoreCase(Settings.UPDATES_DAILY);
   }
-  
+  /**
+   * @return True if weekly updates are enabled
+   */
+
+  public boolean updateWeekly(){
+      String val = settings.get(Settings.UPDATE_DATABASE);
+      return val != null && val.equalsIgnoreCase(Settings.UPDATES_WEEKLY);
+  }
+
   /**
    * @return True if automatic updates are enabled and run for each enforcer build
    *

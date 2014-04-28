@@ -166,10 +166,17 @@ public class VictimsRule implements EnforcerRule {
    * @throws VictimsException
    */
   public void updateDatabase(ExecutionContext ctx) throws VictimsException {
-    
-    VictimsDBInterface db = ctx.getDatabase();
+
     Log log = ctx.getLog();
-    
+
+    // Disable updates via command line -Dvictims.skip.update=true
+    String override = System.getProperty(Settings.UPDATES_OVERRIDE);
+    if (override != null && override.equalsIgnoreCase("true")){
+        log.warn("[victims-enforcer] Updates disabled via system property.");
+        return;
+    }
+
+    VictimsDBInterface db = ctx.getDatabase();
     Date updated = db.lastUpdated(); 
     
     // update automatically every time
@@ -178,20 +185,30 @@ public class VictimsRule implements EnforcerRule {
       db.synchronize();     
    
     // update once per day
-    } else if (ctx.updateDaily()){
-      
-      Date today = new Date();
-      SimpleDateFormat cmp = new SimpleDateFormat("yyyMMdd");
-      boolean updatedToday = cmp.format(today).equals(cmp.format(updated));
-      
-      if (! updatedToday){
-        log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
-        db.synchronize();
-        
-      } else {
-        log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
-      }
-      
+    } else if (ctx.updateDaily()) {
+
+        Date today = new Date();
+        SimpleDateFormat cmp = new SimpleDateFormat("yyyyMMdd");
+        boolean updatedToday = cmp.format(today).equals(cmp.format(updated));
+
+        if (!updatedToday) {
+            log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+            db.synchronize();
+
+        } else {
+            log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
+        }
+    } else if (ctx.updateWeekly()){
+
+        Date today = new Date();
+        SimpleDateFormat cmp = new SimpleDateFormat("yyyyw");
+        if (cmp.format(today).equals(cmp.format(updated))){
+            log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+            db.synchronize();
+        } else {
+            log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
+        }
+
     // updates disabled 
     } else {
       log.debug("[victims-enforcer] database synchronization disabled.");
@@ -272,8 +289,12 @@ public class VictimsRule implements EnforcerRule {
     try {
       
       // Synchronize database with victims service
-      updateDatabase(ctx);
-      
+      try {
+          updateDatabase(ctx);
+      } catch (VictimsException e){
+          log.warn("Unable to update victims database! Your CVE records might be out of date.");
+          log.debug(e.toString());
+      }
       // Concurrently process each dependency 
       executor = Executors.newFixedThreadPool(cores);
       completionService = new ExecutorCompletionService<ArtifactStub>(executor);
