@@ -76,9 +76,9 @@ mvn clean package -Djsse.enableSNIExtension=false
 
                         Valid options are: 
 
-                        auto  : Automatically update the database entries on each build. 
-                        off   : Disable the synchronization mechanism. 
-                              
+                        auto  : Automatically update the database entries on each build.
+                        daily : Update the database entries once per day.
+                        off   : Disable the synchronization mechanism.
                       -->  
                       <updates>auto</updates>
                             
