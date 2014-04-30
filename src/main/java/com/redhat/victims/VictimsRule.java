@@ -77,8 +77,9 @@ public class VictimsRule implements EnforcerRule {
       for (ArtifactCollector collector : collectors ){
           try {
               artifacts.addAll(collector.with(helper).getArtifacts());
-          } catch (Exception e) {
+          } catch (Throwable e) {
               // Expect failures for API incompatabilities
+              helper.getLog().debug("[victims-enforcer] Artifact Collector failed: " + collector.getClass().getName());
               helper.getLog().debug(e.toString());
           }
       }
