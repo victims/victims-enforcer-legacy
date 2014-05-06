@@ -14,7 +14,7 @@ To see the victims-enforcer in action run:
 mvn clean package
 ```
 
-On environments running JDK 1.7 or greater, you will have to disable _jsse.enableSNIExtension_ for synchronization to work.
+On environments running JDK 1.7 or greater, you ***may*** have to disable _jsse.enableSNIExtension_ for synchronization to work.
 ```sh
 mvn clean package -Djsse.enableSNIExtension=false
 ```
@@ -78,7 +78,8 @@ mvn clean package -Djsse.enableSNIExtension=false
 
                         auto  : Automatically update the database entries on each build.
                         daily : Update the database entries once per day.
-                        off   : Disable the synchronization mechanism.
+                        weekly: Update the database entries once per week.
+                        offline   : Disable the synchronization mechanism.
                       -->  
                       <updates>auto</updates>
                             
