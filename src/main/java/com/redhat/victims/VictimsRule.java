@@ -21,29 +21,17 @@ package com.redhat.victims;
  * #L%
  */
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ExecutorCompletionService;
-
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
 
 
 /**
@@ -68,7 +56,7 @@ public class VictimsRule implements EnforcerRule {
   private String jdbcUrl = null;
   private String jdbcUser = null;
   private String jdbcPass = null;
-
+  
 
   /**
    * Main entry point for the enforcer rule.
@@ -78,31 +66,26 @@ public class VictimsRule implements EnforcerRule {
    */
 
   public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
-    MavenProject project;
 
-    try {
+      HashSet<Artifact> artifacts = new HashSet<Artifact>();
+      ArtifactCollector[] collectors = {
+              new DependencyTreeCollector(),
+              new ReactorCollector(),
+              new BaseArtifactCollector()
+      };
 
-      // Get all artifacts for root project
-      Object o = helper.evaluate("${project}");
-      project = (MavenProject) o;
-
-      @SuppressWarnings("unchecked")
-      Set<Artifact> artifacts = project.getArtifacts();
-      helper.getLog().debug("Base pom.xml artifacts - " + artifacts.size());
-
-      // Add reactor artifacts
-      List<MavenProject> reactorProjects = (List<MavenProject>)helper.evaluate("${reactorProjects}");
-      for (MavenProject rp: reactorProjects){
-        artifacts.addAll(rp.getArtifacts());
+      for (ArtifactCollector collector : collectors ){
+          try {
+              artifacts.addAll(collector.with(helper).getArtifacts());
+          } catch (Throwable e) {
+              // Expect failures for API incompatabilities
+              helper.getLog().debug("[victims-enforcer] Artifact Collector failed: " + collector.getClass().getName());
+              helper.getLog().debug(e.toString());
+          }
       }
-      helper.getLog().debug("With reactor project artifacts - " + artifacts.size());
-      
+
       execute(setupContext(helper.getLog()), artifacts);
-      
-    } catch (ExpressionEvaluationException e) {
-      helper.getLog().error(e.getCause());
-    }
-          
+
   }
 
   /**
@@ -184,10 +167,17 @@ public class VictimsRule implements EnforcerRule {
    * @throws VictimsException
    */
   public void updateDatabase(ExecutionContext ctx) throws VictimsException {
-    
-    VictimsDBInterface db = ctx.getDatabase();
+
     Log log = ctx.getLog();
-    
+
+    // Disable updates via command line -Dvictims.skip.update=true
+    String override = System.getProperty(Settings.UPDATES_OVERRIDE);
+    if (override != null && override.equalsIgnoreCase("true")){
+        log.warn("[victims-enforcer] Updates disabled via system property.");
+        return;
+    }
+
+    VictimsDBInterface db = ctx.getDatabase();
     Date updated = db.lastUpdated(); 
     
     // update automatically every time
@@ -196,23 +186,33 @@ public class VictimsRule implements EnforcerRule {
       db.synchronize();     
    
     // update once per day
-    } else if (ctx.updateDaily()){
-      
-      Date today = new Date();
-      SimpleDateFormat cmp = new SimpleDateFormat("yyyMMdd");
-      boolean updatedToday = cmp.format(today).equals(cmp.format(updated));
-      
-      if (! updatedToday){
-        log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
-        db.synchronize();
-        
-      } else {
-        log.debug("Database last synchronized: " + updated.toString());
-      }
-      
+    } else if (ctx.updateDaily()) {
+
+        Date today = new Date();
+        SimpleDateFormat cmp = new SimpleDateFormat("yyyyMMdd");
+        boolean updatedToday = cmp.format(today).equals(cmp.format(updated));
+
+        if (!updatedToday) {
+            log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+            db.synchronize();
+
+        } else {
+            log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
+        }
+    } else if (ctx.updateWeekly()){
+
+        Date today = new Date();
+        SimpleDateFormat cmp = new SimpleDateFormat("yyyyw");
+        if (cmp.format(today).equals(cmp.format(updated))){
+            log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
+            db.synchronize();
+        } else {
+            log.debug("[victims-enforcer] database last synchronized: " + updated.toString());
+        }
+
     // updates disabled 
     } else {
-      log.debug("Database synchronization disabled.");
+      log.debug("[victims-enforcer] database synchronization disabled.");
     }
     
   }
@@ -243,7 +243,7 @@ public class VictimsRule implements EnforcerRule {
       
       ArtifactStub checked = result.get();
       if (checked != null){
-        log.debug("Done: " + checked.getId());
+        log.debug("[victims-enforcer] done: " + checked.getId());
         cache.add(checked.getId(), null);
       }
       
@@ -290,8 +290,12 @@ public class VictimsRule implements EnforcerRule {
     try {
       
       // Synchronize database with victims service
-      updateDatabase(ctx);
-      
+      try {
+          updateDatabase(ctx);
+      } catch (VictimsException e){
+          log.warn("Unable to update victims database! Your CVE records might be out of date.");
+          log.debug(e.toString());
+      }
       // Concurrently process each dependency 
       executor = Executors.newFixedThreadPool(cores);
       completionService = new ExecutorCompletionService<ArtifactStub>(executor);
@@ -304,7 +308,7 @@ public class VictimsRule implements EnforcerRule {
         if (cache.exists(a.getId())){
           
           HashSet<String> cves = cache.get(a.getId());
-          log.debug("Cached: " + a.getId());
+          log.debug("[victims-enforcer] cached: " + a.getId());
           if (! cves.isEmpty()){
             
             VulnerableArtifactException err = new VulnerableArtifactException(a, Settings.FINGERPRINT, cves);
