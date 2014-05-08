@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.redhat.victims</groupId>
   <artifactId>enforce-victims-rule</artifactId>
-  <version>1.3.3-SNAPSHOT</version>
+  <version>1.3.3</version>
   <packaging>jar</packaging>
   <name>victims-enforcer</name>
   <description>Checks a Maven projects dependencies against a database of known vulnerable artifacts.</description>
@@ -95,7 +95,7 @@
     <connection>scm:git:git@github.com:victims/victims-enforcer.git</connection>
     <url>scm:git:git@github.com:victims/victims-enforcer.git</url>
     <developerConnection>scm:git:git@github.com:victims/victims-enforcer.git</developerConnection>
-    <tag>victims-enforcer-1.1</tag>
+    <tag>enforce-victims-rule-1.3.3</tag>
   </scm>
   <build>
     <resources>
