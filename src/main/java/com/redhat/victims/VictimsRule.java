@@ -21,17 +21,26 @@ package com.redhat.victims;
  * #L%
  */
 
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
 
 
 /**
@@ -203,7 +212,7 @@ public class VictimsRule implements EnforcerRule {
 
         Date today = new Date();
         SimpleDateFormat cmp = new SimpleDateFormat("yyyyw");
-        if (cmp.format(today).equals(cmp.format(updated))){
+        if (!cmp.format(today).equals(cmp.format(updated))){
             log.info(TextUI.fmt(Resources.INFO_UPDATES, updated.toString(), VictimsConfig.uri()));
             db.synchronize();
         } else {
