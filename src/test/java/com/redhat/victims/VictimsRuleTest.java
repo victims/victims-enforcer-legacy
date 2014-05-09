@@ -26,6 +26,7 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.After;
 import org.junit.Before;
@@ -44,6 +45,7 @@ public class VictimsRuleTest {
 
   private HttpServer httpd;
   private VictimsDBInterface database = null;
+  private Log logger = new QuietLog(); // use SystemStreamLog() for output..
 
 
   @Before
@@ -104,7 +106,7 @@ public class VictimsRuleTest {
     System.setProperty(VictimsConfig.Key.URI, "http://localhost:1337");
     File tmpdir = new File(System.getProperty("java.io.tmpdir"), "victims_enforcer_test");
     System.setProperty(VictimsConfig.Key.DB_URL, String.format("jdbc:h2:%s;MVCC=true", tmpdir.getAbsolutePath()));
-    System.err.println(System.getProperty(VictimsConfig.Key.DB_URL));
+    //System.err.println(System.getProperty(VictimsConfig.Key.DB_URL));
     System.setProperty(VictimsConfig.Key.PURGE_CACHE, "true");
     System.setProperty(VictimsConfig.Key.DB_PURGE, "true");
     
@@ -122,9 +124,9 @@ public class VictimsRuleTest {
   
   @Test
   public void testFatalExection() {
-    
+
     ExecutionContext context = new ExecutionContext();
-    context.setLog(new SystemStreamLog());
+    context.setLog(logger);
     context.setSettings(new Settings());
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_FATAL);
     context.getSettings().set(Settings.METADATA, Settings.MODE_FATAL);
@@ -136,20 +138,20 @@ public class VictimsRuleTest {
       fail(e.getMessage());
     }
     contextRunner(context, true);
-    
+
   }
  
   @Test
   public void testWarning()  {
-    
+
     ExecutionContext context = new ExecutionContext();
-    context.setLog(new SystemStreamLog());
+    context.setLog(logger);
     context.setSettings(new Settings());
     context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_WARNING);
     context.getSettings().set(Settings.METADATA, Settings.MODE_WARNING);
     context.getSettings().set(Settings.UPDATE_DATABASE, Settings.UPDATES_AUTO);
     context.setDatabase(database);
-    try { 
+    try {
       context.setCache(new VictimsResultCache());
     } catch(VictimsException e){
       fail(e.getMessage());
@@ -163,7 +165,7 @@ public class VictimsRuleTest {
 
       VictimsRule enforcer = new VictimsRule();
       try {
-          enforcer.setupContext(new SystemStreamLog());
+          enforcer.setupContext(logger);
       } catch (EnforcerRuleException e){
           fail(e.getMessage());
       }
@@ -206,7 +208,7 @@ public class VictimsRuleTest {
       VictimsSqlDB database = new MyVictimsSQLDB (lastUpdate);
 
       ExecutionContext context = new ExecutionContext();
-      context.setLog(new SystemStreamLog());
+      context.setLog(logger);
       context.setSettings(new Settings());
       context.getSettings().set(Settings.FINGERPRINT, Settings.MODE_WARNING);
       context.getSettings().set(Settings.METADATA, Settings.MODE_FATAL);
@@ -229,7 +231,7 @@ public class VictimsRuleTest {
   public void testArtifactWithNullFile() {
 
       ExecutionContext ctx = new ExecutionContext();
-      ctx.setLog(new SystemStreamLog());
+      ctx.setLog(logger);
       ctx.setSettings(new Settings());
       ctx.getSettings().set(Settings.FINGERPRINT, Settings.MODE_FATAL);
       ctx.getSettings().set(Settings.METADATA, Settings.MODE_FATAL);
