@@ -43,9 +43,9 @@ def inject_config(elem, versionString):
     artifact = ET.SubElement(plugin, ns("artifactId"))
     artifact.text = "maven-enforcer-plugin"
 
-    #   <version>1.3.2</version>
+    #   <version>1.3.4</version>
     version = ET.SubElement(plugin, ns("version"))
-    version.text = "1.3.2"
+    version.text = "1.3.4"
 
     #   <dependencies>
     dependencies = ET.SubElement(plugin, ns("dependencies"))

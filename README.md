@@ -33,7 +33,7 @@ mvn clean package -Djsse.enableSNIExtension=false
             <dependency>
               <groupId>com.redhat.victims</groupId>
               <artifactId>enforce-victims-rule</artifactId>
-              <version>1.3.2</version>
+              <version>1.3.4</version>
               <type>jar</type>
             </dependency>
           </dependencies>
