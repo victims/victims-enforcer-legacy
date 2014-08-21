@@ -67,8 +67,6 @@ class BaseArtifactCollector implements ArtifactCollector {
                 artifacts.add(artifact);
                 helper.getLog().debug("[victims-enforcer] adding project dependency " + artifact.toString());
             }
-
-
         }
     }
 
@@ -91,7 +89,7 @@ class DependencyTreeCollector extends BaseArtifactCollector {
 
     @Override
     protected void gatherArtifacts() {
-
+        boolean e = false;
         try {
 
             ArtifactRepository localRepository = (ArtifactRepository) helper.evaluate("${localRepository}");
@@ -117,13 +115,17 @@ class DependencyTreeCollector extends BaseArtifactCollector {
             }
 
         } catch (java.lang.NoSuchMethodError ex){
-            helper.getLog().error(ex);
+            helper.getLog().debug(ex); e = true;
         } catch (ComponentLookupException ex) {
-            helper.getLog().error(ex);
+            helper.getLog().debug(ex); e = true;
         } catch (ExpressionEvaluationException ex) {
-            helper.getLog().error(ex);
+            helper.getLog().debug(ex); e = true;
         } catch (DependencyTreeBuilderException ex) {
-            helper.getLog().error(ex);
+            helper.getLog().debug(ex); e = true;
+        } finally {
+            if (e){
+                helper.getLog().info("[victims-enforcer] unable to find dependencies using: 'DependencyTreeBuilder'");
+            }
         }
     }
 }
@@ -144,7 +146,8 @@ class ReactorCollector extends BaseArtifactCollector{
                 }
             }
         } catch (ExpressionEvaluationException ex) {
-            helper.getLog().error(ex);
+            helper.getLog().info(ex);
+            helper.getLog().info("[victims-enforcer] unable to find dependencies using: 'ReactorCollector'");
         }
     }
 }
