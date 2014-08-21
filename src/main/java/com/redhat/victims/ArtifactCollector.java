@@ -146,7 +146,7 @@ class ReactorCollector extends BaseArtifactCollector{
                 }
             }
         } catch (ExpressionEvaluationException ex) {
-            helper.getLog().info(ex);
+            helper.getLog().debug(ex);
             helper.getLog().info("[victims-enforcer] unable to find dependencies using: 'ReactorCollector'");
         }
     }
