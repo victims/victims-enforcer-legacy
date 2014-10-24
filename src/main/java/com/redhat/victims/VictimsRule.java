@@ -146,7 +146,7 @@ public class VictimsRule implements EnforcerRule {
       ctx.setDatabase(VictimsDB.db());
     } catch (VictimsException e) {
       log.debug(e);
-      throw new EnforcerRuleException(e.getMessage());
+      throw new EnforcerRuleException(e.getMessage(), e);
     }
 
     // Setup cache
@@ -154,7 +154,7 @@ public class VictimsRule implements EnforcerRule {
       ctx.setCache(new VictimsResultCache());
     } catch (VictimsException e){
       log.debug(e);
-      throw new EnforcerRuleException(e.getMessage());
+      throw new EnforcerRuleException(e.getMessage(), e);
     }
 
     // Validate settings
@@ -163,8 +163,8 @@ public class VictimsRule implements EnforcerRule {
       ctx.getSettings().show(ctx.getLog());
    
     } catch (VictimsException e) {
-      log.debug(e); 
-      throw new EnforcerRuleException(e.getMessage());
+      log.debug(e);
+      throw new EnforcerRuleException(e.getMessage(), e);
     }
 
     return ctx;
@@ -275,7 +275,7 @@ public class VictimsRule implements EnforcerRule {
         throw ve;
 
       } else { 
-        throw new EnforcerRuleException(e.getCause().getMessage());
+        throw new EnforcerRuleException(e.getCause().getMessage(), e);
       }
     }
   }
@@ -324,7 +324,7 @@ public class VictimsRule implements EnforcerRule {
             log.warn(err.getLogMessage());
             
             if (err.isFatal(ctx)){
-              throw new EnforcerRuleException(err.getErrorMessage());
+              throw new EnforcerRuleException(err.getErrorMessage(), err);
             }
           }
           continue;
@@ -364,12 +364,12 @@ public class VictimsRule implements EnforcerRule {
     } catch (VulnerableArtifactException e){
         // fatal exception
         if (e.isFatal(ctx)){
-          throw new EnforcerRuleException(e.getErrorMessage());
+          throw new EnforcerRuleException(e.getErrorMessage(), e);
         }
       
     } catch (VictimsException e) {
       log.debug(e);
-      throw new EnforcerRuleException(e.getMessage());
+      throw new EnforcerRuleException(e.getMessage(), e);
     
     } finally { 
       
