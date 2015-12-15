@@ -28,7 +28,7 @@ mvn clean package -Djsse.enableSNIExtension=false
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.1.1</version>
+          <version>1.4.1</version>
           <dependencies>
             <dependency>
               <groupId>com.redhat.victims</groupId>
