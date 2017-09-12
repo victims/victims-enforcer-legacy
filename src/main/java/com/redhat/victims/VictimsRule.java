@@ -122,7 +122,7 @@ public class VictimsRule implements EnforcerRule {
     }
     if (entryPoint != null){
       System.setProperty(VictimsConfig.Key.ENTRY, entryPoint);
-      ctx.getSettings().set(VictimsConfig.Key.URI, baseUrl);
+      ctx.getSettings().set(VictimsConfig.Key.ENTRY, entryPoint);
     }
     if (jdbcDriver != null){
       System.setProperty(VictimsConfig.Key.DB_DRIVER, jdbcDriver);
