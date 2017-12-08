@@ -1,4 +1,4 @@
-# enforce-victims-rule [![Build Status](https://travis-ci.org/victims/victims-enforcer.png)](https://travis-ci.org/victims/victims-enforcer)
+# enforce-victims-rule [![Build Status](https://travis-ci.org/victims/victims-enforcer-legacy.svg?branch=master)](https://travis-ci.org/victims/victims-enforcer-legacy)
 
 
 ## About
